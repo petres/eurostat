@@ -1,0 +1,1 @@
+\\luxor\CommonApp\Python\App\python.exe EuroGetter_07a.py

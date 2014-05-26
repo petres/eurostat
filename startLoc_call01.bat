@@ -1,0 +1,1 @@
+D:\ppython\App\python.exe EuroGetter_04.py
