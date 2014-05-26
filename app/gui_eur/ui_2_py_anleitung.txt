@@ -1,2 +1,0 @@
-D:\ppython\App\python D:\ppython\App\Lib\site-packages\PyQt4\uic\pyuic.py first_ui.ui -o first_ui.py^
-D:\ppython\App\python D:\ppython\App\Lib\site-packages\PyQt4\uic\pyuic.py 01.ui -o 01.py

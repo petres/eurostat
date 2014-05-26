@@ -22,9 +22,9 @@ import xlrd
 import xlwt
 
 
-sys.path.append("./app/gui_eur/")  # Graphical Dialog Source
-import eurobulk_07
-import exp01
+sys.path.append("./app/gui/")  # Graphical Dialog Source
+import base
+import export
 
 
 
@@ -37,7 +37,7 @@ class Ui_ExDialog(QtGui.QDialog):
     def __init__(self, mainWin):
         QtGui.QDialog.__init__(self,mainWin)
         self.main=mainWin
-        self.ui = exp01.Ui_Dialog()
+        self.ui = export.Ui_Dialog()
         self.ui.setupUi(self)
 
         self._initExportDialog()
@@ -101,7 +101,7 @@ class Ui_ExDialog(QtGui.QDialog):
 class Window(QtGui.QDialog):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
-        self.ui = eurobulk_07.Ui_Dialog()
+        self.ui = base.Ui_Dialog()
         self.ui.setupUi(self)
 
     #--------- CLASS VARIABLES --------------
@@ -117,7 +117,9 @@ class Window(QtGui.QDialog):
 
         self.cats_sel_mut=[]                    # List of mutation of cats_selected
         self.cats_selected=[]                   # List of Checkbox marked elements [AT, BE..]
-        self.duke=55
+
+        self.multisel_start=0                   # variables for multiselection of checkboxes
+        self.multisel_end=0                     # variables for multiselection of checkboxes
 
         #---in Export Dialog manipulated variables---
         self.ex_tab=""  # chosen category to be in Excel Tabs (incl None)
@@ -158,6 +160,10 @@ class Window(QtGui.QDialog):
         #TEST BUTTONS
         self.connect(self.ui.pushButton_6,QtCore.SIGNAL("clicked()"),self.printDuke)
 ##        self.connect(self.ui.pushButton_7,QtCore.SIGNAL("clicked()"),self.addFileInfo)
+
+        #LINKING OTHER ACTIONS
+        self.connect(self.ui.tabWidget,QtCore.SIGNAL("currentChanged()"),self._tabChanged) # to reset multi-select variables
+
 
 
 ######################### CLASS FUNCTIONS ############################
@@ -214,9 +220,11 @@ class Window(QtGui.QDialog):
 #++++++++++++++FUNCTIONS +++++++++++++++++++++++++++
 
 
-
-
-
+    def _tabChanged(self):  # SIGNAL for the Checkbox-multiselection
+        #set class-vars to 0 if tab is changed - to avoid errors of multiselection via several tabs
+        print("Tab changed - multiselvariables reset")
+        self.multisel_end=0
+        self.multisel_start=0
 
 
     def updateTab(self):
@@ -293,8 +301,13 @@ class Window(QtGui.QDialog):
                 tableWidget.setItem(0,1,QtGui.QTableWidgetItem("Select All"))
                 tableWidget.setItem(0,0,boxall)
 
-                #---data point counter (optional)
-                self.connect(tableWidget,QtCore.SIGNAL("itemChanged(QTableWidgetItem*)"),self.selectAllSignal)   #activates data-point counter
+                ##---data point counter (optional)
+                ##self.connect(tableWidget,QtCore.SIGNAL("itemChanged(QTableWidgetItem*)"),self.selectAllSignal)   #activates data-point counter
+
+                #---link CheckBoxClicking to Selection-Functions---
+                self.connect(tableWidget,QtCore.SIGNAL("cellChanged(int,int)"),self._TableCellChanged)           #is called in case a checkBox was clicked - Use for counter
+                self.connect(tableWidget,QtCore.SIGNAL("cellDoubleClicked(int,int)"),self._TableCellDoubleClicked) #is called in case a checkBox was double clicked - use for multi-selection
+
 
                 for j,text in enumerate(filling[i-1]):                             # fill in categories in i-th Title/Tab
                     #---create  Checkboxes---
@@ -644,28 +657,34 @@ class Window(QtGui.QDialog):
         #newlines=lines
         open(self.dataPath+"_INFO.txt", 'w').writelines(lines)
 
-    def selectAllSignal(self):
-        #FUNCTION: listenfor Select/Deselect all
-        # IF "Select/DeSelect All" was clicked. The Text should change
-        # i.e. klick on "Select All" -> "Deselect all" appears and vice versa
+    def _TableCellChanged(self,r,c):
+        #FUNCTION: Signal is thrown if a Cell was changed
+        # Here only applied for Checkbox-change
 
-        #---get actual tab
-        actTab=self.ui.tabWidget.currentIndex()
+        #INPUT: r=row c=column of the changed Table-Cell
+        #This function checks if it was the "Select All" box
+        #and consequently de- or selects the respective boxes in the actual TAb
 
-        #---check if "all" box was clicked
-        if self.arr_chkbxall[actTab].checkState()==2:
+        #---if "Select all"-Checkbox was changed - deselect or select all
+        if r==0 and c==0:
+            print("select all was clicked...")
 
-            self.arr_chkbxall[actTab].setCheckState(QtCore.Qt.Unchecked)   #uncheck (otherwise a loop starts)
-            text=self.arr_table[actTab].item(0,1).text()                     # get text if it was "select" or "deselect"
-            print("try to chnge "+text)
-            if text=="Select All":
+            #---get actual tab
+            actTab=self.ui.tabWidget.currentIndex()
+
+            #---if "Select All"-Box has changed to ==2  (has now a haekchen)  then select all boxes
+            if self.arr_chkbxall[actTab].checkState()==2:
                 self.selectAllInTab("select",actTab)
-                self.arr_table[actTab].setItem(0,1,QtGui.QTableWidgetItem("Deselect All"))
-            else:
+            #---if "Select All"-Box has changed to ==0  (has now no haekchen)  then DEselect all boxes
+            if self.arr_chkbxall[actTab].checkState()==0:
                 self.selectAllInTab("deselect",actTab)
-                self.arr_table[actTab].setItem(0,1,QtGui.QTableWidgetItem("Select All"))
 
+        else:
+            pass # another checkbox was changed - do nothing
+
+        #---Count the checked boxes and calculate the Amount of its permutations---
         self.ui.lcdNumber.display(self.count_checked_boxes())
+
 
 
     def selectAllInTab(self,cmd,TabNr):
@@ -681,9 +700,78 @@ class Window(QtGui.QDialog):
             for box in self.arr_chkbx[TabNr]:
                 box.setCheckState(QtCore.Qt.Unchecked)
             return True
-        else:
-            print("ERROR - Wrong Command given to Function")
+
+        if cmd!="select" and cmd!="deselect":           #if wrong command is given
+            print("WARNING - Select-All-Command unfeasable: "+str(cmd))
             return False
+
+
+    def _TableCellDoubleClicked(self,r,c):
+        #FUNCTION -Get Signal of DoubleClick in Table (row, column)
+        # Select all Checkboxes between two Doubleclicks in Column 0
+
+
+        print("Doubleclick at row: "+str(r)+" col: "+str(c))
+
+        #---check row---
+        if r==0:        # row 0 ="select all"-cell -> unvalid - therefore abort
+            print("WARNING - Double click in unvalid Cell row - No start row set for multi-selection")
+            return False
+
+        #---set start/end variables ---
+        if self.multisel_start==0:  # if start=0 (is not set yet) then set start-row
+            self.multisel_start=r
+        else:                       # if start!=0 (is already set) then set end row
+            self.multisel_end=r
+            self.selectRowsInTab(self.multisel_start,self.multisel_end)    #check the boxes
+
+
+    def selectRowsInTab(self,r_start,r_end):
+        #select the rows given
+        #and reset the class variables to 0
+        #!! Remember Row 1 = checkbox 0 ; Row 2 = checkbox 1 ...
+        #therefore doubleclick row 0 (Select all) is alwys unvalid
+
+        #---check if start=end - if so reset and abort
+        if (r_end==r_start) and (r_end!=0 and r_start!=0) :
+            self.multisel_start=0
+            self.multisel_end=0
+            print("WARNING - Start row is End row - MultiSelection variables reset to 0")
+            return False
+
+
+        #---get actual tab
+        actTab=self.ui.tabWidget.currentIndex()
+
+        #---check Checkboxes ----
+        for j,box in enumerate(self.arr_chkbx[actTab]):           #for each box in this column (row =j)
+            if self.isBetweenValues(j,r_start-1,r_end-1):         #if j is between r_start and r_end  ; -1 because checkbox 0 is at Row 1
+                box.setCheckState(QtCore.Qt.Checked)
+
+        #---reset varibales---
+        self.multisel_start=0
+        self.multisel_end=0
+
+
+    def isBetweenValues(self,v,v1,v2):
+           # return True if value is between val1 and val2 -inclusive v1 and v2
+           #otherwise return False
+
+        if v2>v1:
+            if v<=v2 and v>=v1:
+                print("value "+str(v)+" is between "+str(v1)+" and "+str(v2))
+                return True
+
+        if v1<v2:
+            if v<=v1 and v>=v2:
+                print("value "+str(v)+" is between "+str(v1)+" and "+str(v2))
+                return True
+
+        print("value "+str(v)+" is NOT between "+str(v1)+" and "+str(v2))
+        return False
+
+
+
 
 
     def count_checked_boxes(self):

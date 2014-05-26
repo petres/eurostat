@@ -1,1 +1,0 @@
-d:\ppython\App\python d:\ppython\App\Lib\site-packages\PyQt4\uic\pyuic.py exp01.ui -o exp01.py
