@@ -64,12 +64,12 @@ class BaseWindow(QtGui.QDialog):
         self.ListFontSize=8
 
     #---- File Directories ----
-        self.dataPath="data/"
-        self.dicPath="data/dicx/"
-        self.outPath="output/"
-        self.dicURL='http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
-        self.bulkURL = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
-        self.eurostatURL ='http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&dir=data'
+        self.dataPath       = "data/"
+        self.dicPath        = "data/dicx/"
+        self.outPath        = "output/"
+        self.dicURL         = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
+        self.bulkURL        = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
+        self.eurostatURL    = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&dir=data'
         self.eurostatURLchar= 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?dir=data&sort=1&sort=2&start=' #+'n' is the list of files start with "n"
     #---- call INITIALIZING FUNCTIONS --------
 
