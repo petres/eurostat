@@ -1,4 +1,4 @@
-UIFILES := $(wildcard app/gui/*.ui)
+UIFILES := $(wildcard gui/*.ui)
 PYFILES := $(UIFILES:.ui=.py)
 
 all: $(PYFILES)
@@ -8,4 +8,4 @@ all: $(PYFILES)
 	
 clean:
 	rm -f *.pyc 
-	rm -f app/gui/*.py*
+	rm -f gui/*.py*
