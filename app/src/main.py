@@ -8,7 +8,7 @@ import os
 
 abspath = os.path.abspath(__file__)
 dirname = os.path.dirname(abspath)
-os.chdir(os.path.join(dirname, ".."))
+os.chdir(os.path.join(dirname, "..", ".."))
 
 def main():
     app = QtGui.QApplication(sys.argv)

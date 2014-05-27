@@ -20,8 +20,8 @@ from PyQt4 import QtCore, QtGui
 import os, sys
 
 sys.path.append(os.path.dirname(__file__))
-sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
-sys.path.append(os.path.join(os.path.dirname(__file__), "gui"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "gui"))
 
 import xlrd
 import xlwt
