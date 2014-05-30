@@ -116,102 +116,100 @@ class BaseWindow(QtGui.QDialog):
 
 
     def updateTab(self, metaData):
-        print(metaData)
-        exit()
+        #print(metaData)
+      
         #FUNCITON:
         #Read class arrays (self.cl_...) and create filling array.
         #The filling array is equal to the displayed array in the big Table
 
-        col_cnt = 3                #intput: number of Columns = 3  (Checkbox, Short, Long)
-        filling=[]                 # fillin is the array of all what is displayed in the big TAble
-        tabnames=[]                 # tabnames are all Titles (geo,time,unit,curr,...)
-        cat_info=""                 # tmp var for infotext eg. "Austria" for "AT"
-
-        #---check if input values exist---
-        if self.cl_title_list.__len__()==0:     #if class variables are not filled use dummies
-            print("Msg: Loading unsuccessful. Class variables empty")
-            return False
+        countColumns = 3            # intput: number of Columns = 3  (Checkbox, Short, Long)
+        tabnames = []                 # tabnames are all Titles (geo,time,unit,curr,...)
+        cat_info = ""                 # tmp var for infotext eg. "Austria" for "AT"
 
 
         #---create TAB titles--- incl TIME (pos 0) and GEO (last pos) PLUS check DICt
-        tabnames.append("TIME")
-        for tt in self.cl_title_list:
-            tabnames.append(tt)
-            ##self.checkDICfile(tt) #redundant
-        tabnames.append("GEO")
+        for entry in metaData["_cols"]:
+            tabnames.append(entry)
+
         tabnames.insert(0,"dummy") #!! one additional Tab that will be deleted at the end
 
         #---get the category arrays---incl TIME (pos 0) and GEO (last pos)
-
-        filling=self.cl_cat_list[:] # !!! [:] is necessary otherwise the filling == cat_list  and change in filling -> change in catlist
-        filling.insert(0,self.cl_time_list)
-        filling.append(self.cl_geo_list)
-
-
         #---clear TAB array ---
         self.arr_tab=[]     #clear tab array
         self.arr_chkbx=[]   #clear checkbox array
         self.arr_chkbxall=[] #clear "select all" checkbox array
 
         #---remove all TABS---
-        for i in range(self.ui.tabWidget.count()):
-            self.ui.tabWidget.removeTab(0)
+        #for i in range(self.ui.tabWidget.count()):
+        #    self.ui.tabWidget.removeTab(0)
+        self.ui.tabWidget.clear();
 
         #---create new TABS---
-        for i,name in enumerate(tabnames):
-            self.arr_tab.append(QtGui.QWidget())                # make (Tab)Widget
-            self.ui.tabWidget.addTab(self.arr_tab[i],name)      # add new TAB with name-array
+        #for i, name in enumerate(tabnames):
+        #    self.arr_tab.append(QtGui.QWidget())                # make (Tab)Widget
+        #    self.ui.tabWidget.addTab(self.arr_tab[i], name)      # add new TAB with name-array
 
 
         #---generate Tables and link Tabs to Tables (incl dummy)
         self.arr_table=[]
-        for i,tn in enumerate(tabnames):                                    # LOOP for each TAB
-            if i==0:                                                        #do nothing for the dummy-TAB at pos 0 (will be deleted)
+        for i, tn in enumerate(tabnames):                                    # LOOP for each TAB
+            
+            
+            if i == 0:
+                tWidget = QtGui.QWidget()                                                        #do nothing for the dummy-TAB at pos 0 (will be deleted)
+                self.ui.tabWidget.addTab(tWidget, tn)
                 continue
             else:
+                entries = metaData[tn]
                 #---TABLE Properties----
-                tableWidget = QtGui.QTableWidget(self.arr_tab[i])           # set Table and Link to Tab
-                tableWidget.setGeometry(QtCore.QRect(10, 10, 491, 271))
-                tableWidget.setColumnCount(col_cnt)
-                tableWidget.setRowCount(filling[i-1].__len__()+1)           #+1 for the "select all" button
-                tableWidget.setColumnWidth(0,40)
-                tableWidget.setColumnWidth(1,100)
-                tableWidget.setColumnWidth(2,300)
+                tableWidget = QtGui.QTableWidget(tWidget)           # set Table and Link to Tab
+                self.ui.tabWidget.addTab(tableWidget, tn)
+                #tableWidget.setGeometry(QtCore.QRect(10, 10, 491, 271))
+                tableWidget.setColumnCount(countColumns)
+                tableWidget.setRowCount(len(entries) + 1)           #+1 for the "select all" button
+                tableWidget.setColumnWidth(0,  40)
+                tableWidget.setColumnWidth(1, 100)
+                tableWidget.setColumnWidth(2, 300)
+                tableWidget.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+                tableWidget.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+                tableWidget.setSortingEnabled(True)
+                tableWidget.horizontalHeader().setStretchLastSection(True)
+
+                tableWidget.setHorizontalHeaderLabels(["Select", "Short", "Long"])
 
                 #---checkbox items ----
                 self.arr_chkbx.append([])                                   #for each Tab a new CheckboxArray
 
                 #---checkbox select all---
-                boxall=QtGui.QTableWidgetItem()                             #make item for select-all-checkbox
+                boxall = QtGui.QTableWidgetItem()                             #make item for select-all-checkbox
                 boxall.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                 boxall.setCheckState(QtCore.Qt.Unchecked)
                 self.arr_chkbxall.append(boxall)
 
                 #---insert "select all" items---
-                tableWidget.setItem(0,1,QtGui.QTableWidgetItem("Select All"))
-                tableWidget.setItem(0,0,boxall)
+                tableWidget.setItem(0, 1, QtGui.QTableWidgetItem("Select All"))
+                tableWidget.setItem(0, 0, boxall)
 
                 ##---data point counter (optional)
                 ##self.connect(tableWidget,QtCore.SIGNAL("itemChanged(QTableWidgetItem*)"),self.selectAllSignal)   #activates data-point counter
 
                 #---link CheckBoxClicking to Selection-Functions---
-                self.connect(tableWidget,QtCore.SIGNAL("cellChanged(int,int)"),self._TableCellChanged)           #is called in case a checkBox was clicked - Use for counter
-                self.connect(tableWidget,QtCore.SIGNAL("cellDoubleClicked(int,int)"),self._TableCellDoubleClicked) #is called in case a checkBox was double clicked - use for multi-selection
+                self.connect(tableWidget, QtCore.SIGNAL("cellChanged(int,int)"), self._TableCellChanged)           #is called in case a checkBox was clicked - Use for counter
+                self.connect(tableWidget, QtCore.SIGNAL("cellDoubleClicked(int,int)"), self._TableCellDoubleClicked) #is called in case a checkBox was double clicked - use for multi-selection
 
-
-                for j,text in enumerate(filling[i-1]):                             # fill in categories in i-th Title/Tab
+                for j, text in enumerate(entries):                             # fill in categories in i-th Title/Tab
                     #---create  Checkboxes---
-                    box=QtGui.QTableWidgetItem()
+                    box = QtGui.QTableWidgetItem()
                     box.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                     box.setCheckState(QtCore.Qt.Unchecked)
                     #---link checkboxitem to array and TAble
-                    self.arr_chkbx[i-1].append(box)
-                    tableWidget.setItem(j+1,0,box)  #j+1 due to empty first line (select all)
+                    self.arr_chkbx[i - 1].append(box)
+                    tableWidget.setItem(j + 1, 0, box)  #j+1 due to empty first line (select all)
 
                     #---insert Info (short, long)---
-                    tableWidget.setItem(j+1,1,QtGui.QTableWidgetItem(text))         #+1 for the "select all" button
-                    cat_info=self.findInDict(tn,text)                              #get "Austria" from input Title ("GEO") and Abbreviationo "AT"
-                    tableWidget.setItem(j+1,2,QtGui.QTableWidgetItem(cat_info))     #+1 for the "select all" button
+                    tableWidget.setItem(j + 1, 1, QtGui.QTableWidgetItem(text))         #+1 for the "select all" button
+                    cat_info = f.findInDict(tn, text)                              #get "Austria" from input Title ("GEO") and Abbreviationo "AT"
+                    tableWidget.setItem(j + 1, 2, QtGui.QTableWidgetItem(cat_info))     #+1 for the "select all" button
 
                 tableWidget.resizeRowsToContents()
 
@@ -222,9 +220,6 @@ class BaseWindow(QtGui.QDialog):
         #---delete Dummy Tab ----    due to an unknown reason , the first tab cannot be filled with a tab.
         #                           there fore the empty "dummy" tab is deleted in all arrays.
         self.ui.tabWidget.removeTab(0)
-        #del self.arr_table[0]
-        del self.arr_tab[0]
-
         self.ui.tabWidget.setCurrentIndex(0)
 
 

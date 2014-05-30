@@ -17,7 +17,7 @@ import gzip
 
 class Settings():
     dataPath            = "data/"
-    dictPath            = "data/dicx/"
+    dictPath            = "data/dict/"
     outputPath          = "output/"
     dictURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
     bulkURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
@@ -133,6 +133,9 @@ def loadTsvFile(dbname):
                 if tmp[-1] not in metaData["geo"]:    # fill GEO List with the GEO Info (is always last)
                     metaData["geo"].append(tmp[-1].strip())
 
+    metaData["_cols"].insert(0, "time")
+    metaData["_cols"].append("geo")
+
     return metaData
 
 #----------------------------------------------
@@ -222,15 +225,15 @@ def findInDict(title, shorty):
     try:
         dictFileName = Settings.dictPath + title + ".dic"             #open dict that is equal to the TAbtitle
 
-        with open(dicFileName,"r") as dictFile:
-            dictReader = csv.reader(dictFile,delimiter = "\t")
+        with open(dictFileName, "r") as dictFile:
+            dictReader = csv.reader(dictFile, delimiter = "\t")
             for row in dictReader:                           #search every row of the dict for the short
                 if row[0] == shorty:                              #if they match
                     longy = row[1]                           #append to long
                     return str(longy)
         return "n.a."
     except:
-        print("ERROR- in Dic File opening:" + dictFileName)
+        log("ERROR - in Dic File opening: " + dictFileName)
         return False
 
 
