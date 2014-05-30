@@ -3,18 +3,6 @@
 ################## LIBRARY IMPORTs################################
 import os, sys, time
 
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import urlopen
-
-# CSV (reading csv/tsv files)
-import csv
-# GZIP (uncompress .gz files)
-import gzip
-
 from PyQt4 import QtCore, QtGui
 
 import os, sys
@@ -23,10 +11,12 @@ sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "gui"))
 
-import xlrd
-import xlwt
+import xlrd, xlwt
 
 from ExportDialog import ExportDialog
+
+from helpers import Settings
+import helpers as f
 
 import base
 
@@ -55,22 +45,9 @@ class BaseWindow(QtGui.QDialog):
         self.multisel_start=0                   # variables for multiselection of checkboxes
         self.multisel_end=0                     # variables for multiselection of checkboxes
 
-        #---in Export Dialog manipulated variables---
-        self.ex_tab=""  # chosen category to be in Excel Tabs (incl None)
-        self.ex_row=""  # chosen category to be in Excel Rows
-        self.ex_col=""  # chosen category to be in Excel Columns
-
     #---Option Parameters---
         self.ListFontSize=8
 
-    #---- File Directories ----
-        self.dataPath       = "data/"
-        self.dicPath        = "data/dicx/"
-        self.outPath        = "output/"
-        self.dicURL         = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
-        self.bulkURL        = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
-        self.eurostatURL    = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&dir=data'
-        self.eurostatURLchar= 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?dir=data&sort=1&sort=2&start=' #+'n' is the list of files start with "n"
     #---- call INITIALIZING FUNCTIONS --------
 
 
@@ -79,8 +56,7 @@ class BaseWindow(QtGui.QDialog):
 
     #---- LINKING BUTTONS --------
         # OK and Abort #+++++++++++++++++++++++++++
-        self.connect(self.ui.buttonBox, QtCore.SIGNAL("accepted()"),self.doOK)
-        self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"),self.doAB)
+        self.connect(self.ui.buttonBox, QtCore.SIGNAL("close()"),self.close)
 
         self.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"),self._loadDB)
         self.connect(self.ui.pushButton_2,QtCore.SIGNAL("clicked()"),self._addDB)
@@ -92,7 +68,6 @@ class BaseWindow(QtGui.QDialog):
         #self.connect(self.ui.pushButton_10,QtCore.SIGNAL("clicked()"),self._optionDialog)
 
         #TEST BUTTONS
-        self.connect(self.ui.pushButton_6,QtCore.SIGNAL("clicked()"),self.printDuke)
 ##        self.connect(self.ui.pushButton_7,QtCore.SIGNAL("clicked()"),self.addFileInfo)
 
         #LINKING OTHER ACTIONS
@@ -103,36 +78,15 @@ class BaseWindow(QtGui.QDialog):
 ######################### CLASS FUNCTIONS ############################
 
 
-
-
-    def printDuke(self):
-        #print self.duke
-        print str(self.ui.lcdNumber.value())
-
-    # OK & Abort +++++++++++++++++++++++++++
-    def doOK(self):
-        print("ok")
-        self.accept()
-
-    def doAB(self):
-        print("abort")
-        self.reject()
-
 #++++++++++++++INITIALIZING #+++++++++++++++++++++++++++
 
     def updateDBList(self):
-
         #---read filenames in data-directory ---
-        tsv_cntr=0
-        tsv_names=[]
-        for ba in os.listdir(self.dataPath):
-            if ba[-4:]==".tsv":
-                tsv_cntr+=1
-                tsv_names.append(ba[:-4])
+        tsv_names = f.getFileList()
 
         #---addjust List ----
         self.ui.tableWidget_3.setColumnCount(3)
-        self.ui.tableWidget_3.setRowCount(tsv_cntr)
+        self.ui.tableWidget_3.setRowCount(len(tsv_names))
         self.ui.tableWidget_3.setColumnWidth(0,100)
         self.ui.tableWidget_3.setColumnWidth(1,70)
         self.ui.tableWidget_3.setColumnWidth(2,70)
@@ -140,17 +94,17 @@ class BaseWindow(QtGui.QDialog):
 
         self.ui.tableWidget_3.setHorizontalHeaderLabels(["filename","last update","size"])
 
-        for i,fname in enumerate(tsv_names):
+        for i, fname in enumerate(tsv_names):
             self.ui.tableWidget_3.setItem(i,0,QtGui.QTableWidgetItem(fname))
-            fileinfo= self.getFileInfo(fname).split(";")
-            self.ui.tableWidget_3.setItem(i,1,QtGui.QTableWidgetItem(fileinfo[1]))
-            self.ui.tableWidget_3.setItem(i,2,QtGui.QTableWidgetItem(fileinfo[2]))
+            fileinfo = f.getFileInfo(fname).split(";")
+            self.ui.tableWidget_3.setItem(i,1,QtGui.QTableWidgetItem(fileinfo[1].strip(' \t\n\r')))
+            self.ui.tableWidget_3.setItem(i,2,QtGui.QTableWidgetItem(fileinfo[2].strip(' \t\n\r')))
 
         #adjust size
-        font= QtGui.QFont()
-        font.setPointSize(self.ListFontSize)
-        self.ui.tableWidget_3.setFont(font)
-        self.ui.tableWidget_3.resizeRowsToContents()
+        #font= QtGui.QFont()
+        #font.setPointSize(self.ListFontSize)
+        #self.ui.tableWidget_3.setFont(font)
+        #self.ui.tableWidget_3.resizeRowsToContents()
 #++++++++++++++FUNCTIONS +++++++++++++++++++++++++++
 
 
@@ -161,7 +115,9 @@ class BaseWindow(QtGui.QDialog):
         self.multisel_start=0
 
 
-    def updateTab(self):
+    def updateTab(self, metaData):
+        print(metaData)
+        exit()
         #FUNCITON:
         #Read class arrays (self.cl_...) and create filling array.
         #The filling array is equal to the displayed array in the big Table
@@ -274,23 +230,16 @@ class BaseWindow(QtGui.QDialog):
 
     def _removeDBfile(self):
         # removes selected tsv-file from data directory
+        row_sel = self.ui.tableWidget_3.currentRow()  #---get name of selected db---
 
-        row_sel=self.ui.tableWidget_3.currentRow()  #---get name of selected db---
-
-        if row_sel==-1:
+        if row_sel == -1:
             print("WARNING - No Database seleced...no file removed.")  #---check for no selection
             return False
 
-        tsvfile=str(self.ui.tableWidget_3.item(row_sel,0).text())+".tsv"  #---get name of selected item---
-        print("removing file "+self.dataPath+tsvfile)
-
-        #---removing file---
-        os.remove(self.dataPath+tsvfile)
-        self.delFileInfo(tsvfile)  # -4 to delete the ".tsv" string
+        name = str(self.ui.tableWidget_3.item(row_sel,0).text())   #---get name of selected item---
+        f.removeTsvFile(name);
+        f.delFileInfo(name)  # -4 to delete the ".tsv" string
         self.updateDBList()
-
-
-
 
 
     def _updateDBfile(self):
@@ -304,292 +253,65 @@ class BaseWindow(QtGui.QDialog):
         else:
             file_selected=str(self.ui.tableWidget_3.item(row_sel,0).text())  #---get name of selected item---
 
-            if(self.downloadTSV(file_selected)):                               #---re-download
+            if(f.downloadTsvFile(file_selected)):                               #---re-download
                 print("Update of "+file_selected+" successful")
-                self.addFileInfo(file_selected)                   # --- get current file info
+                f.addFileInfo(file_selected)                   # --- get current file info
             else:
                 print("ERROR in downloading the file: "+file_selected+".tsv")
 
         self.updateDBList()
 
 
-
-
-    def _loadDB(self):   # loading the selected  database
-    # return False if no Database was selected
+    def _loadDB(self):   
+        # loading the selected  database
+        # return False if no Database was selected
 
         #---get selected database---
-        row_sel=self.ui.tableWidget_3.currentRow()                              #---get selected row
+        row_sel = self.ui.tableWidget_3.currentRow()                              #---get selected row
 
-        if row_sel==-1:                                                          #---check for invalid selection
-            print("WARNING - No Database seleced...")
+        if row_sel == -1:                                                          #---check for invalid selection
+            f.log("WARNING - No Database seleced...")
             return False
 
-        file_selected=str(self.ui.tableWidget_3.item(row_sel,0).text())         #---read selected name---
-        print ("Attempt to load selected database: "+file_selected)
+        name = str(self.ui.tableWidget_3.item(row_sel, 0).text())         #---read selected name---
+        f.log("Attempt to load selected database: " + name)
 
-        self.ui.label_2.setText("Actual Database: "+file_selected)               #---update info-label above TAble
+        self.ui.label_2.setText("Actual Database: " + name)               #---update info-label above TAble
 
         #---load TSV Information to class arrays---
-        self.loadTSVinfo(file_selected)
+        metaData = f.loadTsvFile(name)
 
         #---update Tabs = Filling tabs with info from class arrays ---
-        self.updateTab()
+        self.updateTab(metaData)
 
 
-
-    def _addDB(self):    # download new database and update lst
+    def _addDB(self):    
+        # download new database and update lst
         # returns FALSE if download of tsv-File fails or file is already in the List
 
-        fileName=str(self.ui.lineEdit.displayText())    #---GET FILENAME from LineEdit
+        fileName = str(self.ui.lineEdit.displayText())    #---GET FILENAME from LineEdit
 
         #---check empty
         if fileName=="":
             print("WARNING - No filename inserted - Nothing execuded!")
             return False
 
-        fileName=fileName.replace(" ","")               # deleting unintentionally space-characers
+        fileName = fileName.replace(" ","")               # deleting unintentionally space-characers
 
         #---CHECK - is file already in Database?
-        if fileName+".tsv" in os.listdir("data/"):
+        if fileName in f.getFileList():
             print("Warning - tsv File already exists - Press Update button to redownload file")
             self.ui.lineEdit.clear()
             return False
 
         #---try to download and add file in db-directory ----
-        if self.downloadTSV(fileName):
+        if f.downloadTsvFile(fileName):
             self.ui.lineEdit.clear()    # clear line edit
-            self.addFileInfo(fileName) # html-read the update-date and file size of the downloaded file
+            f.addFileInfo(fileName) # html-read the update-date and file size of the downloaded file
             self.updateDBList()         # update list to show new db
 
-            print("Download successful")
-
-
-
-
-
-    def loadTSVinfo(self,dbname):
-        #FUNCtION: reads existing tsv-file
-        #1) checks dictionary
-        #2) fills class variables (cat_list,time_list) with the info
-        #   (titles,categories,dictionary...)
-
-        #TSV - FIle Structure after open as tsv:
-        # 1st row: [unit,nace_r1,indic_na,geo\time] [2012]  [2011] ... [1980]
-        # 2nd row  [CPI00_EUR,A_B,B1G,AT] [value] [value]...
-
-        #OUTPUT: 2D-Array: for titles:[unit,nace_r1,indic_na,geo\time]
-        # cat_list (2DArray) =[ [cpi00_eur,cpi00_nac...],[A_B,C-E,D,F...],[B1G] ]
-        # time_list          = [2012,2011,2010...]
-        # geo_list          = [AT,BE,BG...SI]
-
-        tmp=[]
-        title_list=[]    #array for titles (without geo/time)   "unit,nace_r1,indic_na"
-        cat_list=[]     # array for all categories               "DI_pps,
-        time_list=[]  #array for time                       "2012,2011,2010..."
-        geo_list=[]   # array for GEO
-
-
-        #---open file and read line by line---
-        tsvFileName = self.dataPath+dbname+'.tsv'
-        with open(tsvFileName, 'r') as tsvFile:
-            tsvReader = csv.reader(tsvFile, delimiter='\t')
-
-            for i, row in enumerate(tsvReader):
-                if i==0:
-                    #---get dic-TITLES---
-                    title_list=(row[0].split(","))[:-1]        # [:-1] -> title_list without the last "geo/time"
-
-                    #---check DICTIONARY and append 2D-array for Category-list
-                    for tt in title_list:
-                        self.checkDICfile(tt)           #check dictionary of each title
-                        cat_list.append([])             # make category-Arrayfor each title
-
-                    #---get TIME array from row---
-                    for j in range(1,row.__len__()):  # starts at 1 because at [0] are categories
-                        time_list.append(row[j])
-
-                else:
-                    #---get Categories and GEO
-                    tmp=row[0].split(",")                     # row eg. CPI00_EUR,A_B,B1G,BG
-                    for i,tt in enumerate(title_list):        # for each title check if the category of this row is in the cat_list
-                        if tmp[i] not in cat_list[i]:           # if not then append to cat_list in the row of the respective title
-                            cat_list[i].append(tmp[i])
-
-                    if tmp[tmp.__len__()-1] not in geo_list:    # fill GEO List with the GEO Info (is always last)
-                        geo_list.append(tmp[tmp.__len__()-1])
-
-        #fill info in class-variables
-        self.cl_time_list=time_list
-        self.cl_cat_list=cat_list
-        self.cl_geo_list=geo_list
-        self.cl_title_list=title_list
-
-
-    def findInDict(self,title,shorty):
-        #INPUT: title is equal to .dic -filename    (Geo)
-        #INPUT: shorts is the abbreviations (AT)
-        #RETURN: Long-Text of shorts     (Austria...)
-
-        if title.upper()=="TIME":    #TIME is the only title without long-text
-            return ""
-
-        longy=""
-
-        try:
-            dicFileName = self.dicPath+title+".dic"             #open dict that is equal to the TAbtitle
-
-            with open(dicFileName,"r") as dicFile:
-                dicReader = csv.reader(dicFile,delimiter="\t")
-                for row in dicReader:                           #search every row of the dict for the short
-                    if row[0]==shorty:                              #if they match
-                        longy = row[1]                           #append to long
-                        return str(longy)
-            return "n.a."
-
-        except:
-            print("ERROR- in Dic File opening:"+dicFileName)
-            return False
-
-
-
-    def checkDICfile(self,fileName):
-        #return True if dictionar exists or download was successful; or if fileName=TIME (where no Dic exists)
-        #return False otherwise;
-
-        if fileName.upper=="TIME":
-            return True
-
-        dicFileName=fileName+".dic"
-
-        print("check for dictionary "+dicFileName)
-        if dicFileName in os.listdir(self.dicPath):
-            print("dictionary found...OK")
-        else:
-            print("dictionary NOT found...start download attempt")
-            if self.downloadDIC(dicFileName):
-                return True
-            else:
-                return False
-
-
-    def downloadDIC(self,dicFileName):   # download of eurostat dictionary file
-    #return True if download OK
-    #return False otherwise
-
-        try:#---get URL and response---
-            fileURL =self.dicURL+dicFileName
-            response = urlopen(fileURL)
-            print("Dictionary download OK")
-        except:
-            print("ERROR in downloading Dictionary "+dicFileName)
-            return False
-
-        try:#---saving download---
-            os.chdir(self.dicPath)
-            with open(dicFileName, 'wb') as outfile:
-                outfile.write(response.read())
-
-            os.chdir("..") # 2x because dic is 2steps down
-            os.chdir("..")
-        except:
-            print("ERROR in saving Dictionary "+dicFileName)
-            return False
-
-
-
-    def downloadTSV(self,fileName):
-        #returns True if successful downloaded and extracted
-        #returns False at any error
-
-
-        print("START attempt to download file "+fileName+".tsv from the Eurostat Webpage...please wait")
-
-        os.chdir(self.dataPath)  #change directory to Data (otherwise trouble with the "open" function
-        gzFileName=fileName+".tsv.gz"
-        tsvFileName =fileName+'.tsv'
-
-        try:
-            #---get gz file from eurostat page---
-            fileURL = self.bulkURL + gzFileName
-            response = urlopen(fileURL)
-
-            with open(gzFileName, 'wb') as outfile:
-                outfile.write(response.read())
-
-            #---EXTRACT TSV.GZ.FILE---
-            with open(tsvFileName, 'wb') as outfile, gzip.open(gzFileName) as infile:
-                outfile.write(infile.read())
-
-            #---delete gz file---
-            os.remove(gzFileName)
-
-            os.chdir("..")
-            print("Download and Extraction successfull")
-            return True
-
-        except Exception as ee:   # delete the remains of partdownloads - if they exist
-            print("ERROR in Download and/or Extraction of tsv file: "+str(ee))
-            print("TIP: Check File availability at Eurostat, Database Name and the Download-URL in the Options")
-            if gzFileName in os.listdir("./"):
-                os.remove(gzFileName)
-            if tsvFileName in os.listdir("./"):
-                os.remove(tsvFileName)
-            os.chdir("..")
-            return False
-
-
-
-
-    def addFileInfo(self,fname):
-    #FUNCTION : reads fileinformation (last update, filesize) from the eurostat webpage
-    #           and stores info in _INFO.txt
-
-        #---read html data and search filename---
-        fileURL = self.eurostatURLchar+fname[0]  # the url is sorted e.g. it ends with "a" for a List of files that start with "a"
-        response = urlopen(fileURL)
-
-        for line in response:
-            if fname in line:
-                info= line
-                break
-
-        # ---extract size and date from html text
-        fsize= info.split("</td>")[1].split(">")[1]
-        fdate= info.split("</td>")[3].split("&nbsp;")[1][:10]
-        finfo=fname+";"+fdate+";"+fsize  # = "aact_ali02;6.5 KB;07/04/2014"
-
-        #---write in file
-        with open(self.dataPath+"_INFO.txt","a") as f:
-            f.write(finfo+"\n")
-
-
-
-    def getFileInfo(self,fname):
-        # for filename "aact_ali02 this function returns: "6.5 KB;07/04/2014"
-        # by looking in the _INFO-file.
-
-        if fname[-4:]==".tsv":   #file.tsv -> file  (if necessary)
-            fname=fname[:-4]
-
-        lines = open(self.dataPath+"_INFO.txt").readlines()
-        for ln in lines:
-            if fname in ln:
-                return ln
-        return "n.a.;n.a.;n.a."
-
-
-    def delFileInfo(self,fname):
-    #FUNCTION : removes fileinfo (update-date,size) to _info.txt
-        if fname[-4:]==".tsv":   #file.tsv -> file  (if necessary)
-            fname=fname[:-4]
-
-        todelete=self.getFileInfo(fname) #as "aact_ali02;6.5 KB;07/04/2014"
-
-        lines = open(self.dataPath+"_INFO.txt").readlines()
-        lines.remove(todelete)
-        #newlines=lines
-        open(self.dataPath+"_INFO.txt", 'w').writelines(lines)
+            f.log("Download successful")
+    
 
     def _TableCellChanged(self,r,c):
         #FUNCTION: Signal is thrown if a Cell was changed
@@ -618,7 +340,6 @@ class BaseWindow(QtGui.QDialog):
 
         #---Count the checked boxes and calculate the Amount of its permutations---
         self.ui.lcdNumber.display(self.count_checked_boxes())
-
 
 
     def selectAllInTab(self,cmd,TabNr):
@@ -705,9 +426,6 @@ class BaseWindow(QtGui.QDialog):
         return False
 
 
-
-
-
     def count_checked_boxes(self):
         #returns number of total selected data points (via checkboxes)
 
@@ -727,7 +445,6 @@ class BaseWindow(QtGui.QDialog):
             total*=n
 
         return total
-
 
 
     def _initExport(self):
@@ -761,8 +478,6 @@ class BaseWindow(QtGui.QDialog):
         dialog.show()
 
 
-
-
     def setExportCats(self,tab,row,col):
         #---this function is solely for the Export dialog to call
 
@@ -776,6 +491,7 @@ class BaseWindow(QtGui.QDialog):
         print("column: "+self.ex_col)
 
 
+
     def startExport(self):
         print("Start exporting...")
 
@@ -783,9 +499,6 @@ class BaseWindow(QtGui.QDialog):
         #---mutations generated
 
         # if self.ex_tab!="":  # split mutations.
-
-
-
 
 
     def getSelectedCats(self):
