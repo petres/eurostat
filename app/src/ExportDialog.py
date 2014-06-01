@@ -1,72 +1,53 @@
 # -*- coding: utf-8 -*-
 
-################## LIBRARY IMPORTs################################
-import os, sys, time
-
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import urlopen
-
-# CSV (reading csv/tsv files)
-import csv
-# GZIP (uncompress .gz files)
-import gzip
-
-from PyQt4 import QtCore, QtGui
-
 import os, sys
-
 sys.path.append(os.path.dirname(__file__))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "gui"))
 
-import xlrd
-import xlwt
+# QT
+from PyQt4 import QtCore, QtGui
 
+# HELPERS AND SETTINGS
+from helpers import Settings
+import helpers as f
+
+# EXPORT UI
 import export
-
-
-
-
-
-#######################################################################
-################## ADDITIONAL DIALOGS CLASS################################
 
 class ExportDialog(QtGui.QDialog):
     def __init__(self, mainWin):
-        QtGui.QDialog.__init__(self,mainWin)
-        self.main=mainWin
+        QtGui.QDialog.__init__(self, mainWin)
+        self.main = mainWin
         self.ui = export.Ui_Dialog()
         self.ui.setupUi(self)
 
-        self._initExportDialog()
-
-##        self.connect(self.ui.buttonBox, QtCore.SIGNAL("accepted()"),self.doOK)
-##        self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"),self.doAB)
-        self.connect(self.ui.pushButton, QtCore.SIGNAL("clicked()"),self._doExport)
-        self.connect(self.ui.pushButton_2, QtCore.SIGNAL("clicked()"),self._doAbort)
-
-    def _initExportDialog(self):
-        #---get selected categories---
-        cat_sel=self.main.cl_title_list[:]
-        cat_sel.insert(0,"GEO")
-        cat_sel.append("TIME")
-
-        self.ui.comboBox.addItem("None") # NONE-Option for Excel-Tabs
-
-        for sel in cat_sel:
-            self.ui.comboBox.addItem(sel)
-            self.ui.comboBox_2.addItem(sel)
-            self.ui.comboBox_3.addItem(sel)
+        self.metaData = None
+        self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
+        self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._doExport)
 
 
-        self.ui.comboBox.setCurrentIndex(0)
-        self.ui.comboBox_2.setCurrentIndex(self.ui.comboBox_2.count()-1)
-        self.ui.comboBox_3.setCurrentIndex(0)
+    def init(self, metaData, selection):
+        self.metaData = metaData
 
+        self.combos = { self.ui.tabCombo: ["None"] + metaData["_cols"], 
+                        self.ui.rowCombo: metaData["_cols"], 
+                        self.ui.colCombo: metaData["_cols"]}
+
+        for combo in self.combos:
+            combo.addItems(self.combos[combo])
+            self.connect(combo, QtCore.SIGNAL("currentIndexChanged(QString)"), self._comboChanged)
+            combo.setCurrentIndex(0)    
+
+
+    def _comboChanged(self, text):
+        sender = self.sender()
+        selectedEntries = [sender.currentText()]
+        for combo in self.combos:
+            if combo == sender:
+                continue
+            while combo.currentText() in selectedEntries: 
+                combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[combo]))
+            selectedEntries.append(combo.currentText())
 
     def _doExport(self): # return selected categories
 
@@ -93,7 +74,3 @@ class ExportDialog(QtGui.QDialog):
         if a!=b and a!=c and b!=c:
             return True
         return False
-##
-##    def _test(self):
-##        print("you clicked me...!")
-##        pass

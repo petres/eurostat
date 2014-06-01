@@ -1,4 +1,16 @@
-import os
+# -*- coding: utf-8 -*-
+
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
+
+# CSV (reading csv/tsv files)
+import csv
+# GZIP (uncompress .gz files)
+import gzip
+# EXCEL READ
+import xlrd
+# EXCEL WRITE
+import xlwt
 
 try:
     # For Python 3.0 and later
@@ -7,10 +19,7 @@ except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import urlopen
 
-# CSV (reading csv/tsv files)
-import csv
-# GZIP (uncompress .gz files)
-import gzip
+
 #----------------------------------------------
 #----- SETTINGS -------------------------------
 #----------------------------------------------
@@ -25,7 +34,6 @@ class Settings():
     eurostatURLchar     = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?dir=data&sort=1&sort=2&start=' #+'n' is the list of files start with "n"
 
 #----------------------------------------------
-
 
 
 
@@ -98,6 +106,7 @@ def loadTsvFile(dbname):
     # geo_list          = [AT,BE,BG...SI]
 
     metaData = {}
+    metaData["_name"]   = dbname
     metaData["_cols"]   = []
     metaData["time"]    = []
     metaData["geo"]     = []
