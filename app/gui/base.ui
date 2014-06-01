@@ -192,6 +192,9 @@
            <height>35</height>
           </size>
          </property>
+         <property name="digitCount">
+          <number>9</number>
+         </property>
         </widget>
        </item>
        <item>

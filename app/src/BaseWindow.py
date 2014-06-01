@@ -29,21 +29,9 @@ class BaseWindow(QtGui.QDialog):
         self.ui.setupUi(self)
 
     #--------- CLASS VARIABLES --------------
-        self.arr_chkbx=[]       #check box elements
-        self.arr_chkbxall=[]  # checkbox for "Select all"
-        self.arr_tab=[]      # Tabs of the TabWidget
-        self.arr_table=[]    #tableWidget of each Tab
-
-        self.cl_geo_list=[]         #array for GEO
-        self.cl_time_list=[]       #array for GEO
-        self.cl_cat_list=[]         #2D-array for categories
-        self.cl_title_list=[]       #array for titles (without geo/time)   "unit,nace_r1,indic_na"
-
-        self.cats_sel_mut=[]                    # List of mutation of cats_selected
-        self.cats_selected=[]                   # List of Checkbox marked elements [AT, BE..]
-
-        self.multisel_start=0                   # variables for multiselection of checkboxes
-        self.multisel_end=0                     # variables for multiselection of checkboxes
+        self.ignoreItemChanges = False
+        self.metaData = None
+        self.tables = None
 
     #---Option Parameters---
         self.ListFontSize=8
@@ -122,36 +110,20 @@ class BaseWindow(QtGui.QDialog):
         #Read class arrays (self.cl_...) and create filling array.
         #The filling array is equal to the displayed array in the big Table
 
-        countColumns = 3            # intput: number of Columns = 3  (Checkbox, Short, Long)
-        tabnames = []                 # tabnames are all Titles (geo,time,unit,curr,...)
-        cat_info = ""                 # tmp var for infotext eg. "Austria" for "AT"
-
 
         #---create TAB titles--- incl TIME (pos 0) and GEO (last pos) PLUS check DICt
+        tabnames = []                 # tabnames are all Titles (geo,time,unit,curr,...)
         for entry in metaData["_cols"]:
             tabnames.append(entry)
 
         tabnames.insert(0,"dummy") #!! one additional Tab that will be deleted at the end
 
-        #---get the category arrays---incl TIME (pos 0) and GEO (last pos)
-        #---clear TAB array ---
-        self.arr_tab=[]     #clear tab array
-        self.arr_chkbx=[]   #clear checkbox array
-        self.arr_chkbxall=[] #clear "select all" checkbox array
-
-        #---remove all TABS---
-        #for i in range(self.ui.tabWidget.count()):
-        #    self.ui.tabWidget.removeTab(0)
         self.ui.tabWidget.clear();
-
-        #---create new TABS---
-        #for i, name in enumerate(tabnames):
-        #    self.arr_tab.append(QtGui.QWidget())                # make (Tab)Widget
-        #    self.ui.tabWidget.addTab(self.arr_tab[i], name)      # add new TAB with name-array
-
+        self.metaData = metaData
+        self.tables = {}
 
         #---generate Tables and link Tabs to Tables (incl dummy)
-        self.arr_table=[]
+        
         for i, tn in enumerate(tabnames):                                    # LOOP for each TAB
             
             
@@ -165,26 +137,22 @@ class BaseWindow(QtGui.QDialog):
                 tableWidget = QtGui.QTableWidget(tWidget)           # set Table and Link to Tab
                 self.ui.tabWidget.addTab(tableWidget, tn)
                 #tableWidget.setGeometry(QtCore.QRect(10, 10, 491, 271))
-                tableWidget.setColumnCount(countColumns)
+                tableWidget.setColumnCount(3)
                 tableWidget.setRowCount(len(entries) + 1)           #+1 for the "select all" button
                 tableWidget.setColumnWidth(0,  40)
                 tableWidget.setColumnWidth(1, 100)
                 tableWidget.setColumnWidth(2, 300)
                 tableWidget.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
                 tableWidget.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-                tableWidget.setSortingEnabled(True)
+                #tableWidget.setSortingEnabled(True)
                 tableWidget.horizontalHeader().setStretchLastSection(True)
 
                 tableWidget.setHorizontalHeaderLabels(["Select", "Short", "Long"])
-
-                #---checkbox items ----
-                self.arr_chkbx.append([])                                   #for each Tab a new CheckboxArray
 
                 #---checkbox select all---
                 boxall = QtGui.QTableWidgetItem()                             #make item for select-all-checkbox
                 boxall.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                 boxall.setCheckState(QtCore.Qt.Unchecked)
-                self.arr_chkbxall.append(boxall)
 
                 #---insert "select all" items---
                 tableWidget.setItem(0, 1, QtGui.QTableWidgetItem("Select All"))
@@ -194,8 +162,8 @@ class BaseWindow(QtGui.QDialog):
                 ##self.connect(tableWidget,QtCore.SIGNAL("itemChanged(QTableWidgetItem*)"),self.selectAllSignal)   #activates data-point counter
 
                 #---link CheckBoxClicking to Selection-Functions---
-                self.connect(tableWidget, QtCore.SIGNAL("cellChanged(int,int)"), self._TableCellChanged)           #is called in case a checkBox was clicked - Use for counter
-                self.connect(tableWidget, QtCore.SIGNAL("cellDoubleClicked(int,int)"), self._TableCellDoubleClicked) #is called in case a checkBox was double clicked - use for multi-selection
+                #self.connect(tableWidget, QtCore.SIGNAL("cellChanged(int,int)"), self._TableCellChanged)           #is called in case a checkBox was clicked - Use for counter
+                #self.connect(tableWidget, QtCore.SIGNAL("cellDoubleClicked(int,int)"), self._TableCellDoubleClicked) #is called in case a checkBox was double clicked - use for multi-selection
 
                 for j, text in enumerate(entries):                             # fill in categories in i-th Title/Tab
                     #---create  Checkboxes---
@@ -203,7 +171,6 @@ class BaseWindow(QtGui.QDialog):
                     box.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                     box.setCheckState(QtCore.Qt.Unchecked)
                     #---link checkboxitem to array and TAble
-                    self.arr_chkbx[i - 1].append(box)
                     tableWidget.setItem(j + 1, 0, box)  #j+1 due to empty first line (select all)
 
                     #---insert Info (short, long)---
@@ -213,14 +180,51 @@ class BaseWindow(QtGui.QDialog):
 
                 tableWidget.resizeRowsToContents()
 
-                #---LINK TABLE TO class variable
-                self.arr_table.append(tableWidget)
+                self.connect(tableWidget, QtCore.SIGNAL("itemChanged(QTableWidgetItem*)"), self._tableItemChanged)
+                self.tables[tn] = tableWidget
 
 
         #---delete Dummy Tab ----    due to an unknown reason , the first tab cannot be filled with a tab.
         #                           there fore the empty "dummy" tab is deleted in all arrays.
         self.ui.tabWidget.removeTab(0)
         self.ui.tabWidget.setCurrentIndex(0)
+
+
+    def _tableItemChanged(self, tableItem):
+        table   = tableItem.tableWidget()
+        if not self.ignoreItemChanges:
+            self.ignoreItemChanges = True
+            col     = tableItem.column()
+            row     = tableItem.row()
+
+            if row == 0 and col == 0:
+                # All Select
+                for i in range(1, table.rowCount()):
+                    table.item(i, 0).setCheckState(tableItem.checkState())
+            else:
+                # Area Select
+                selectedRows = set();
+                for s in table.selectedItems():
+                    selectedRows.add(s.row());
+
+                if row in selectedRows:
+                    for i in selectedRows:
+                        table.item(i, 0).setCheckState(tableItem.checkState())
+            self.ignoreItemChanges = False
+
+        # Set Counter
+        ec = 1
+        for table in self.tables:
+            tableWidget = self.tables[table]
+            c = 0
+            for i in range(1, tableWidget.rowCount()):
+                if tableWidget.item(i, 0).checkState() == QtCore.Qt.Checked:
+                    c += 1
+            ec *= c
+            if ec == 0:
+                break
+
+        self.ui.lcdNumber.display(ec)
 
 
     def _removeDBfile(self):
@@ -306,148 +310,14 @@ class BaseWindow(QtGui.QDialog):
             self.updateDBList()         # update list to show new db
 
             f.log("Download successful")
-    
-
-    def _TableCellChanged(self,r,c):
-        #FUNCTION: Signal is thrown if a Cell was changed
-        # Here only applied for Checkbox-change
-
-        #INPUT: r=row c=column of the changed Table-Cell
-        #This function checks if it was the "Select All" box
-        #and consequently de- or selects the respective boxes in the actual TAb
-
-        #---if "Select all"-Checkbox was changed - deselect or select all
-        if r==0 and c==0:
-            print("select all was clicked...")
-
-            #---get actual tab
-            actTab=self.ui.tabWidget.currentIndex()
-
-            #---if "Select All"-Box has changed to ==2  (has now a haekchen)  then select all boxes
-            if self.arr_chkbxall[actTab].checkState()==2:
-                self.selectAllInTab("select",actTab)
-            #---if "Select All"-Box has changed to ==0  (has now no haekchen)  then DEselect all boxes
-            if self.arr_chkbxall[actTab].checkState()==0:
-                self.selectAllInTab("deselect",actTab)
-
-        else:
-            pass # another checkbox was changed - do nothing
-
-        #---Count the checked boxes and calculate the Amount of its permutations---
-        self.ui.lcdNumber.display(self.count_checked_boxes())
-
-
-    def selectAllInTab(self,cmd,TabNr):
-        # Function selects or de selects all boxes of a tab.
-        #input : cmd = eiter "select" or "deselect" and The Tab index
-
-        ##print("cmd is "+cmd)
-        if cmd=="select":
-            for box in self.arr_chkbx[TabNr]:           #for each box in this column
-                box.setCheckState(QtCore.Qt.Checked)
-            return True
-        if cmd=="deselect":
-            for box in self.arr_chkbx[TabNr]:
-                box.setCheckState(QtCore.Qt.Unchecked)
-            return True
-
-        if cmd!="select" and cmd!="deselect":           #if wrong command is given
-            print("WARNING - Select-All-Command unfeasable: "+str(cmd))
-            return False
-
-
-    def _TableCellDoubleClicked(self,r,c):
-        #FUNCTION -Get Signal of DoubleClick in Table (row, column)
-        # Select all Checkboxes between two Doubleclicks in Column 0
-
-
-        print("Doubleclick at row: "+str(r)+" col: "+str(c))
-
-        #---check row---
-        if r==0:        # row 0 ="select all"-cell -> unvalid - therefore abort
-            print("WARNING - Double click in unvalid Cell row - No start row set for multi-selection")
-            return False
-
-        #---set start/end variables ---
-        if self.multisel_start==0:  # if start=0 (is not set yet) then set start-row
-            self.multisel_start=r
-        else:                       # if start!=0 (is already set) then set end row
-            self.multisel_end=r
-            self.selectRowsInTab(self.multisel_start,self.multisel_end)    #check the boxes
-
-
-    def selectRowsInTab(self,r_start,r_end):
-        #select the rows given
-        #and reset the class variables to 0
-        #!! Remember Row 1 = checkbox 0 ; Row 2 = checkbox 1 ...
-        #therefore doubleclick row 0 (Select all) is alwys unvalid
-
-        #---check if start=end - if so reset and abort
-        if (r_end==r_start) and (r_end!=0 and r_start!=0) :
-            self.multisel_start=0
-            self.multisel_end=0
-            print("WARNING - Start row is End row - MultiSelection variables reset to 0")
-            return False
-
-
-        #---get actual tab
-        actTab=self.ui.tabWidget.currentIndex()
-
-        #---check Checkboxes ----
-        for j,box in enumerate(self.arr_chkbx[actTab]):           #for each box in this column (row =j)
-            if self.isBetweenValues(j,r_start-1,r_end-1):         #if j is between r_start and r_end  ; -1 because checkbox 0 is at Row 1
-                box.setCheckState(QtCore.Qt.Checked)
-
-        #---reset varibales---
-        self.multisel_start=0
-        self.multisel_end=0
-
-
-    def isBetweenValues(self,v,v1,v2):
-           # return True if value is between val1 and val2 -inclusive v1 and v2
-           #otherwise return False
-
-        if v2>v1:
-            if v<=v2 and v>=v1:
-                print("value "+str(v)+" is between "+str(v1)+" and "+str(v2))
-                return True
-
-        if v1<v2:
-            if v<=v1 and v>=v2:
-                print("value "+str(v)+" is between "+str(v1)+" and "+str(v2))
-                return True
-
-        print("value "+str(v)+" is NOT between "+str(v1)+" and "+str(v2))
-        return False
-
-
-    def count_checked_boxes(self):
-        #returns number of total selected data points (via checkboxes)
-
-        chk_cnt=0   # count checks
-        chksum=[]   #array of actual checks
-
-        for boxcol in self.arr_chkbx:   # for each column of checkboxes...
-            chk_cnt=0
-            for box in boxcol:           #for each box in this column
-                if box.checkState()==2:   #checkState 0(unchecked) 2(checked)
-                    chk_cnt+=1
-
-            chksum.append(chk_cnt)
-
-        total=1
-        for n in chksum:    #Mulitplication of selected rows equal the total selected data points
-            total*=n
-
-        return total
 
 
     def _initExport(self):
 
         #--check if in each Tab at least one is selected---
-        checkLCD=self.ui.lcdNumber.value()
-        if checkLCD<1:
-            print("WARNING: For an Export procedure at least one item in each Tab need to be selected!!")
+        checkLCD = self.ui.lcdNumber.value()
+        if checkLCD < 1:
+            f.log("WARNING: For an Export procedure at least one item in each Tab need to be selected!!")
             return
 
         #---write box selection in CLass Array ---
@@ -484,7 +354,6 @@ class BaseWindow(QtGui.QDialog):
         print("tab: "+self.ex_tab)
         print("row: "+self.ex_row)
         print("column: "+self.ex_col)
-
 
 
     def startExport(self):
