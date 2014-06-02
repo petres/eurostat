@@ -288,7 +288,7 @@ class BaseWindow(QtGui.QDialog):
             selection[code] = []
             for i in range(1, tableWidget.rowCount()):
                 if tableWidget.item(i, 0).checkState() == QtCore.Qt.Checked:
-                    selection[code].append(tableWidget.item(i, 1).text())
+                    selection[code].append(str(tableWidget.item(i, 1).text()))
         return selection
 
 

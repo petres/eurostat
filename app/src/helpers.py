@@ -11,6 +11,8 @@ import gzip
 import xlrd
 # EXCEL WRITE
 import xlwt
+# ITERTOOLS FOR PERMUTATIONS
+import itertools
 
 try:
     # For Python 3.0 and later
@@ -141,10 +143,10 @@ def loadTsvFile(name):
                 tmp = row[0].split(",")                     # row eg. CPI00_EUR,A_B,B1G,BG
                 for i, tt in enumerate(metaData["_cols"]):  # for each title check if the category of this row is in the cat_list
                     colName = metaData["_cols"][i]
-                    if tmp[i] not in metaData[colName]:           # if not then append to cat_list in the row of the respective title
+                    if tmp[i].strip() not in metaData[colName]:           # if not then append to cat_list in the row of the respective title
                         metaData[colName].append(tmp[i].strip())
 
-                if tmp[-1] not in metaData["geo"]:    # fill GEO List with the GEO Info (is always last)
+                if tmp[-1].strip() not in metaData["geo"]:    # fill GEO List with the GEO Info (is always last)
                     metaData["geo"].append(tmp[-1].strip())
 
     metaData["_cols"].insert(0, "time")
@@ -298,6 +300,114 @@ def downloadDictFile(dictFileName):
 
 #----------------------------------------------
 
+
+
+#----------------------------------------------
+#----- EXPRT ----------------------------------
+#----------------------------------------------
+def export(name, selection = None, structure = None, fileType = "EXCEL", fileName = "output/output.xls"):
+    wb = xlwt.Workbook()
+    data = _prepareData(name, selection)
+
+    #if len(structure["tab"]) == 0:
+    offset = (5, 0)
+
+    #for 
+    table = _prepareTable(data, structure, selection)
+
+    ws = wb.add_sheet("0", cell_overwrite_ok = True)
+
+    for i, label in enumerate(table["rowLabels"]):
+        ws.write(offset[0] + i, offset[1], label)
+
+    for i, label in enumerate(table["colLabels"]):
+        ws.write(offset[0], offset[1] + i, label)
+
+    
+    for i, line in enumerate(table["data"]):
+        for j, entry in enumerate(line):
+            ws.write(offset[0] + i + 1, offset[1] + j + 1, entry)
+
+    wb.save(fileName)
+
+
+def _prepareTable(data, structure, selection, fixed = {}):
+    cols = []
+    print selection
+    for i in structure["col"]:
+        cols.append(selection[i])
+
+    rows = []
+    for i in structure["row"]:
+        rows.append(selection[i])
+
+    baseCols = data["cols"]
+    
+    colP = list(itertools.product(*cols))
+    rowP = list(itertools.product(*rows))
+
+    table = { "rowLabels": rowP,
+              "colLabels": colP,
+              "data":      []}
+
+    for r in rowP:
+        values = []
+        for c in colP:
+            keyList = []
+            for bc in baseCols:
+                if bc in structure["col"]:
+                    keyEntry = c[structure["col"].index(bc)]
+                elif bc in structure["row"]:
+                    keyEntry = r[structure["row"].index(bc)]
+                elif bc in fixed:
+                    keyEntry = fixed[bc]
+                else:
+                    raise Exception('Wow Wow Wow')
+
+                keyList.append(keyEntry)
+
+            value = data["data"][tuple(keyList)]
+            values.append(value)
+        table["data"].append(values)
+
+    return table
+
+
+def _prepareData(name, selection = None):
+    time    = []
+    data    = { "data": {}, "cols": []}
+
+    tsvFileName = os.path.join(Settings.dataPath, name + '.tsv')
+    with open(tsvFileName, 'r') as tsvFile:
+        tsvReader = csv.reader(tsvFile, delimiter='\t')
+        for i, row in enumerate(tsvReader):
+            if i == 0:
+                data["cols"] = (row[0].split(","))[:-1] + ["geo", "time"]
+                for j in range(1, len(row)):  # starts at 1 because at [0] are categories
+                    time.append(row[j].strip())
+            else:
+                inSelection = True
+                keyList = []
+                tmp = row[0].split(",")                     # row eg. CPI00_EUR,A_B,B1G,BG
+                
+                for k, tt in enumerate(tmp):
+                    # FILTERING
+                    if (selection is not None) and (tt.strip() not in selection[data["cols"][k]]):
+                        inSelection = False
+                        break
+                    keyList.append(tt.strip())
+
+                if not inSelection:
+                    continue
+
+                for j in range(1, len(row)):  # starts at 1 because at [0] are categories
+                    # FILTERING
+                    if (selection is not None) and (time[j - 1] not in selection["time"]):
+                        continue
+
+                    key = tuple(keyList + [time[j - 1]])
+                    data["data"][key] = row[j].strip()
+    return data
 
 
 #----------------------------------------------

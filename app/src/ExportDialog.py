@@ -21,58 +21,56 @@ class ExportDialog(QtGui.QDialog):
         self.ui = export.Ui_Dialog()
         self.ui.setupUi(self)
 
-        self.metaData = None
         self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
         self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._doExport)
 
 
     def init(self, metaData, selection):
-        self.metaData = metaData
+        self.metaData   = metaData
+        self.selection  = selection
 
-        self.combos = { self.ui.tabCombo: ["None"] + metaData["_cols"], 
-                        self.ui.rowCombo: metaData["_cols"], 
-                        self.ui.colCombo: metaData["_cols"]}
+        self.combos = { "tab": { "combo": self.ui.tabCombo, "values": ["None"] + metaData["_cols"]}, 
+                        "row": { "combo": self.ui.rowCombo, "values": metaData["_cols"]}, 
+                        "col": { "combo": self.ui.colCombo, "values": metaData["_cols"]}}
 
-        for combo in self.combos:
-            combo.addItems(self.combos[combo])
+        for comboType in self.combos:
+            combo = self.combos[comboType]["combo"]
+            combo.addItems(self.combos[comboType]["values"])
             self.connect(combo, QtCore.SIGNAL("currentIndexChanged(QString)"), self._comboChanged)
             
-        for combo in self.combos:
+        for comboType in self.combos:
+            combo = self.combos[comboType]["combo"]
             combo.setCurrentIndex(1)
             combo.setCurrentIndex(0)
+
 
     def _comboChanged(self, text):
         sender = self.sender()
         selectedEntries = [sender.currentText()]
-        for combo in self.combos:
+        for comboType in self.combos:
+            combo = self.combos[comboType]["combo"]
             if combo == sender:
                 continue
             while combo.currentText() in selectedEntries: 
-                combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[combo]))
+                combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[comboType]["values"]))
             selectedEntries.append(combo.currentText())
 
-    def _doExport(self): # return selected categories
 
+    def _doExport(self): 
         #---read from combobox---
-        ex_tab=str(self.ui.comboBox.currentText())
-        ex_row=str(self.ui.comboBox_2.currentText())
-        ex_col=str(self.ui.comboBox_3.currentText())
+        structure = {}
 
-        #--check---
-        if self.checkCombo(ex_tab,ex_row,ex_col):    #---if all chosen texts are different
-            self.main.setExportCats(ex_tab,ex_row,ex_col)
-            self.accept()
-            self.main.startExport()
-        else:
-            print("WARNING - Selected categories need to be different!")
+        allCols = self.metaData["_cols"]
+        print allCols
+        for comboType in self.combos:
+            text = self.combos[comboType]["combo"].currentText()
+            if text == "None":
+                structure[comboType] = []
+            else:
+                structure[comboType] = [str(text)]
+                allCols.remove(text)
+            
 
+        structure["row"].extend(allCols)
 
-    def _doAbort(self): # return empty categories
-        print ("export aborted")
-        self.main.setExportCats("","","") #---to be safe...
-        self.reject()
-
-    def checkCombo(self,a,b,c): #checks if all texts are different, then return true
-        if a!=b and a!=c and b!=c:
-            return True
-        return False
+        f.export(self.metaData["_name"], selection = self.selection, structure = structure, fileType = "EXCEL")
