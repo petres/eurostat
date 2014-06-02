@@ -36,8 +36,10 @@ class ExportDialog(QtGui.QDialog):
         for combo in self.combos:
             combo.addItems(self.combos[combo])
             self.connect(combo, QtCore.SIGNAL("currentIndexChanged(QString)"), self._comboChanged)
-            combo.setCurrentIndex(0)    
-
+            
+        for combo in self.combos:
+            combo.setCurrentIndex(1)
+            combo.setCurrentIndex(0)
 
     def _comboChanged(self, text):
         sender = self.sender()

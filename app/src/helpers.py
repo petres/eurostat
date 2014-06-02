@@ -47,37 +47,38 @@ def downloadTsvFile(name):
 
     log("START attempt to download file " + name + ".tsv from the Eurostat Webpage ... please wait")
 
-    os.chdir(Settings.dataPath)  #change directory to Data (otherwise trouble with the "open" function
-    gzFileName  = name + ".tsv.gz"
-    tsvFileName = name + ".tsv"
+    gzFileName   = name + ".tsv.gz"
+    fGzFileName  = os.path.join(Settings.dataPath, gzFileName)
+    tsvFileName  = name + ".tsv"
+    fTsvFileName = os.path.join(Settings.dataPath, tsvFileName)
 
     try:
         #---get gz file from eurostat page---
         fileURL = Settings.bulkURL + gzFileName
         response = urlopen(fileURL)
 
-        with open(gzFileName, 'wb') as outfile:
+        with open(fGzFileName, 'wb') as outfile:
             outfile.write(response.read())
 
         #---EXTRACT TSV.GZ.FILE---
-        with open(tsvFileName, 'wb') as outfile, gzip.open(gzFileName) as infile:
+        with open(fTsvFileName, 'w') as outfile, gzip.open(fGzFileName) as infile:
             outfile.write(infile.read())
 
         #---delete gz file---
-        os.remove(gzFileName)
+        os.remove(fGzFileName)
 
-        os.chdir("..")
         log("Download and Extraction successfull")
         return True
 
     except Exception as ee:   # delete the remains of partdownloads - if they exist
         log("ERROR in Download and/or Extraction of tsv file: "+str(ee))
         log("TIP: Check File availability at Eurostat, Database Name and the Download-URL in the Options")
-        if gzFileName in os.listdir("./"):
-            os.remove(gzFileName)
-        if tsvFileName in os.listdir("./"):
-            os.remove(tsvFileName)
-        os.chdir("..")
+
+        if os.path.isfile(fGzFileName):
+            os.remove(fGzFileName)
+        if os.path.isfile(fTsvFileName):
+            os.remove(fTsvFileName)
+
         return False
 
 
@@ -90,7 +91,7 @@ def removeTsvFile(name):
     os.remove(Settings.dataPath + fileName)
 
 
-def loadTsvFile(dbname):
+def loadTsvFile(name):
     #FUNCtION: reads existing tsv-file
     #1) checks dictionary
     #2) fills class variables (cat_list,time_list) with the info
@@ -106,14 +107,18 @@ def loadTsvFile(dbname):
     # geo_list          = [AT,BE,BG...SI]
 
     metaData = {}
-    metaData["_name"]   = dbname
+    metaData["_name"]   = name
     metaData["_cols"]   = []
     metaData["time"]    = []
     metaData["geo"]     = []
-
+    checkDictFile("geo")
 
     #---open file and read line by line---
-    tsvFileName = Settings.dataPath + dbname + '.tsv'
+    tsvFileName = os.path.join(Settings.dataPath, name + '.tsv')
+
+    if not os.path.isfile(tsvFileName):
+        downloadTsvFile(name)
+
     with open(tsvFileName, 'r') as tsvFile:
         tsvReader = csv.reader(tsvFile, delimiter='\t')
 
@@ -162,6 +167,11 @@ def getFileInfo(fname):
     if fname[-4:] == ".tsv":   #file.tsv -> file  (if necessary)
         fname = fname[:-4]
 
+    infoFile = os.path.join(Settings.dataPath, "_INFO.txt")
+
+    if not os.path.isfile(infoFile):
+        open(infoFile, 'a').close()
+
     lines = open(Settings.dataPath + "_INFO.txt").readlines()
     for ln in lines:
         if fname in ln:
@@ -177,10 +187,11 @@ def delFileInfo(fname):
 
     todelete = Settings.getFileInfo(fname) #as "aact_ali02;6.5 KB;07/04/2014"
 
-    lines = open(Settings.dataPath+"_INFO.txt").readlines()
+    infoFile = os.path.join(Settings.dataPath, "_INFO.txt")
+
+    lines = open(infoFile).readlines()
     lines.remove(todelete)
-    #newlines=lines
-    open(Settings.dataPath + "_INFO.txt", 'w').writelines(lines)
+    open(infoFile, 'w').writelines(lines)
 
 
 def addFileInfo(fname):
@@ -201,8 +212,9 @@ def addFileInfo(fname):
     fdate = info.split("</td>")[3].split("&nbsp;")[1][:10]
     finfo = fname + ";" + fdate + ";" + fsize  # = "aact_ali02;6.5 KB;07/04/2014"
 
+    infoFile = os.path.join(Settings.dataPath, "_INFO.txt")
     #---write in file
-    with open(Settings.dataPath + "_INFO.txt", "a") as f:
+    with open(infoFile, "a") as f:
         f.write(finfo + "\n")
 
 
@@ -260,7 +272,7 @@ def checkDictFile(fileName):
         log("dictionary found...OK")
         return True
     else:
-        log("dictionary NOT found...start download attempt")
+        log("dictionary NOT found ... start download attempt")
         return downloadDictFile(dictFileName) 
 
 
@@ -278,12 +290,8 @@ def downloadDictFile(dictFileName):
         return False
 
     try:#---saving download---
-        os.chdir(Settings.dictPath)
-        with open(dicFileName, 'wb') as outfile:
+        with open(os.path.join(Settings.dictPath, dictFileName), 'wb') as outfile:
             outfile.write(response.read())
-
-        os.chdir("..") # 2x because dic is 2steps down
-        os.chdir("..")
     except:
         log("ERROR in saving Dictionary " + dictFileName)
         return False
