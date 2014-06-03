@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>409</width>
-    <height>190</height>
+    <height>296</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -29,7 +29,7 @@
       </size>
      </property>
      <property name="title">
-      <string>Excel Options</string>
+      <string>Structure</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
@@ -63,6 +63,54 @@
         </item>
         <item row="2" column="1">
          <widget class="QComboBox" name="colCombo"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Options</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <layout class="QFormLayout" name="formLayout_2">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Empty Entry</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Time Sorting</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="emptyEntry">
+          <property name="autoFillBackground">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="timeSorting">
+          <item>
+           <property name="text">
+            <string>ascending</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>descending</string>
+           </property>
+          </item>
+         </widget>
         </item>
        </layout>
       </item>

@@ -14,12 +14,17 @@ import xlwt
 # ITERTOOLS FOR PERMUTATIONS
 import itertools
 
+# QT (only for constants)
+from PyQt4 import QtCore
+
 try:
     # For Python 3.0 and later
     from urllib.request import urlopen
 except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import urlopen
+
+from operator import add
 
 
 #----------------------------------------------
@@ -30,10 +35,14 @@ class Settings():
     dataPath            = "data/"
     dictPath            = "data/dict/"
     outputPath          = "output/"
+
     dictURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
     bulkURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
     eurostatURL         = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&dir=data'
     eurostatURLchar     = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?dir=data&sort=1&sort=2&start=' #+'n' is the list of files start with "n"
+
+    exportEmptyCellSign = ""
+    eurostatEmptyCellSign = ":"
 
 #----------------------------------------------
 
@@ -283,7 +292,8 @@ def downloadDictFile(dictFileName):
     #return True if download OK
     #return False otherwise
 
-    try:#---get URL and response---
+    try:
+        # get URL and response
         fileURL = Settings.dictURL + dictFileName
         response = urlopen(fileURL)
         log("Dictionary download OK")
@@ -291,8 +301,9 @@ def downloadDictFile(dictFileName):
         log("ERROR in downloading Dictionary " + dictFileName)
         return False
 
-    try:#---saving download---
+    try:
         with open(os.path.join(Settings.dictPath, dictFileName), 'wb') as outfile:
+            # saving download
             outfile.write(response.read())
     except:
         log("ERROR in saving Dictionary " + dictFileName)
@@ -305,35 +316,51 @@ def downloadDictFile(dictFileName):
 #----------------------------------------------
 #----- EXPRT ----------------------------------
 #----------------------------------------------
-def export(name, selection = None, structure = None, fileType = "EXCEL", fileName = "output/output.xls"):
+
+def export(name, selection = None, structure = None, fileType = "EXCEL", fileName = "output/output.xls", sorting = None):
     wb = xlwt.Workbook()
+
     data = _prepareData(name, selection)
 
-    #if len(structure["tab"]) == 0:
-    offset = (5, 0)
+    initialOffset = (5, 0)
 
-    #for 
-    table = _prepareTable(data, structure, selection)
+    table = _prepareTable(data, structure, selection, sorting)
 
-    ws = wb.add_sheet("0", cell_overwrite_ok = True)
+    #ws = wb.add_sheet("0", cell_overwrite_ok = True)
+    ws = wb.add_sheet("Data")
 
-    for i, label in enumerate(table["rowLabels"]):
-        ws.write(offset[0] + i, offset[1], label)
+    for i, label in enumerate(table["rowLabelsStructure"]):
+        ws.write(initialOffset[0], initialOffset[1] + i, label)
+
+    labelOffset = (len(table["colLabelsStructure"]), len(table["rowLabelsStructure"]))
+
+    # Labels
+    for i, labels in enumerate(table["rowLabels"]):
+        for j, label in enumerate(labels):
+            ws.write(initialOffset[0] + i + labelOffset[0], initialOffset[1] + j, label)
 
     for i, label in enumerate(table["colLabels"]):
-        ws.write(offset[0], offset[1] + i, label)
+        ws.write(initialOffset[0], initialOffset[1] + i + labelOffset[1], label)
 
-    
+    offset = map(add, initialOffset, labelOffset)
+
+    # Data
     for i, line in enumerate(table["data"]):
         for j, entry in enumerate(line):
-            ws.write(offset[0] + i + 1, offset[1] + j + 1, entry)
+            ws.write(offset[0] + i, offset[1] + j, entry)
 
     wb.save(fileName)
 
 
-def _prepareTable(data, structure, selection, fixed = {}):
+def _prepareTable(data, structure, selection, sorting = {}, fixed = {}):
+    # SORTING
+    for entry in sorting:
+        if sorting[entry] == QtCore.Qt.DescendingOrder:
+            selection[entry] = sorted(selection[entry], reverse=True)
+        elif sorting[entry] == QtCore.Qt.AscendingOrder:
+            selection[entry] = sorted(selection[entry])
+
     cols = []
-    print selection
     for i in structure["col"]:
         cols.append(selection[i])
 
@@ -346,7 +373,9 @@ def _prepareTable(data, structure, selection, fixed = {}):
     colP = list(itertools.product(*cols))
     rowP = list(itertools.product(*rows))
 
-    table = { "rowLabels": rowP,
+    table = { "rowLabelsStructure": structure["row"],
+              "colLabelsStructure": structure["col"],
+              "rowLabels": rowP,
               "colLabels": colP,
               "data":      []}
 
@@ -362,11 +391,18 @@ def _prepareTable(data, structure, selection, fixed = {}):
                 elif bc in fixed:
                     keyEntry = fixed[bc]
                 else:
-                    raise Exception('Wow Wow Wow')
+                    raise Exception('Wow Wow Wow, thats not good, keylist and dict differ, what have you done?')
 
                 keyList.append(keyEntry)
 
-            value = data["data"][tuple(keyList)]
+            key = tuple(keyList)
+            value = None
+            if key in data["data"]:
+                value = data["data"][key]
+
+            if value is None:
+                value = Settings.exportEmptyCellSign
+
             values.append(value)
         table["data"].append(values)
 
@@ -379,7 +415,7 @@ def _prepareData(name, selection = None):
 
     tsvFileName = os.path.join(Settings.dataPath, name + '.tsv')
     with open(tsvFileName, 'r') as tsvFile:
-        tsvReader = csv.reader(tsvFile, delimiter='\t')
+        tsvReader = csv.reader(tsvFile, delimiter = '\t')
         for i, row in enumerate(tsvReader):
             if i == 0:
                 data["cols"] = (row[0].split(","))[:-1] + ["geo", "time"]
@@ -406,7 +442,11 @@ def _prepareData(name, selection = None):
                         continue
 
                     key = tuple(keyList + [time[j - 1]])
-                    data["data"][key] = row[j].strip()
+                    entry = row[j].strip()
+                    if entry == Settings.eurostatEmptyCellSign:
+                        entry = None
+
+                    data["data"][key] = entry
     return data
 
 

@@ -21,6 +21,8 @@ class ExportDialog(QtGui.QDialog):
         self.ui = export.Ui_Dialog()
         self.ui.setupUi(self)
 
+        self.ui.emptyEntry.setText(Settings.exportEmptyCellSign)
+
         self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
         self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._doExport)
 
@@ -40,8 +42,9 @@ class ExportDialog(QtGui.QDialog):
             
         for comboType in self.combos:
             combo = self.combos[comboType]["combo"]
-            combo.setCurrentIndex(1)
-            combo.setCurrentIndex(0)
+        
+        self.ui.colCombo.setCurrentIndex(1)
+        self.ui.colCombo.setCurrentIndex(0)
 
 
     def _comboChanged(self, text):
@@ -57,20 +60,30 @@ class ExportDialog(QtGui.QDialog):
 
 
     def _doExport(self): 
-        #---read from combobox---
         structure = {}
+        sorting = {}
 
-        allCols = self.metaData["_cols"]
-        print allCols
+        ## Empty text setting
+        Settings.exportEmptyCellSign = str(self.ui.emptyEntry.text())
+
+        ## Sorting setting
+        timeSorting = str(self.ui.timeSorting.currentText())
+        if timeSorting == "ascending":
+            sorting["time"] = QtCore.Qt.AscendingOrder
+        elif timeSorting == "descending":
+            sorting["time"] = QtCore.Qt.DescendingOrder
+
+        ## Structure setting
+        # copy list, we should not modify the meta data
+        allCols = list(self.metaData["_cols"])
         for comboType in self.combos:
             text = self.combos[comboType]["combo"].currentText()
             if text == "None":
                 structure[comboType] = []
             else:
                 structure[comboType] = [str(text)]
-                allCols.remove(text)
-            
+                allCols.remove(text)          
 
         structure["row"].extend(allCols)
 
-        f.export(self.metaData["_name"], selection = self.selection, structure = structure, fileType = "EXCEL")
+        f.export(self.metaData["_name"], selection = self.selection, structure = structure, fileType = "EXCEL", sorting = sorting)
