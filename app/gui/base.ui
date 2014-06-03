@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>base</class>
+ <widget class="QDialog" name="base">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Euroexp</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>
@@ -38,7 +38,7 @@
          <enum>QLayout::SetMinimumSize</enum>
         </property>
         <item>
-         <widget class="QTableWidget" name="tableWidget_3">
+         <widget class="QTableWidget" name="databaseTable">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -89,21 +89,21 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="QPushButton" name="pushButton_3">
+           <widget class="QPushButton" name="updateButton">
             <property name="text">
              <string>Update</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="loadButton">
             <property name="text">
              <string>Load</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_9">
+           <widget class="QPushButton" name="removeButton">
             <property name="text">
              <string>Remove</string>
             </property>
@@ -121,7 +121,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="addButton">
             <property name="text">
              <string>Add new</string>
             </property>
@@ -146,63 +146,28 @@
        </item>
        <item>
         <widget class="QTabWidget" name="tabWidget">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="currentIndex">
           <number>0</number>
          </property>
          <widget class="QWidget" name="tab">
           <attribute name="title">
-           <string>Tab 1</string>
+           <string>Info</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="0" column="0">
-            <widget class="QTableWidget" name="tableWidget">
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>No data loaded</string>
              </property>
-             <property name="alternatingRowColors">
-              <bool>true</bool>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
              </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::MultiSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-             <property name="sortingEnabled">
-              <bool>true</bool>
-             </property>
-             <property name="cornerButtonEnabled">
-              <bool>false</bool>
-             </property>
-             <property name="columnCount">
-              <number>3</number>
-             </property>
-             <attribute name="verticalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <column>
-              <property name="text">
-               <string>Select</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Short</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Long</string>
-              </property>
-             </column>
             </widget>
            </item>
           </layout>
-         </widget>
-         <widget class="QWidget" name="tab_2">
-          <attribute name="title">
-           <string>Tab 2</string>
-          </attribute>
          </widget>
         </widget>
        </item>
@@ -231,21 +196,24 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_4">
+        <widget class="QPushButton" name="loadPresetButton">
          <property name="text">
           <string>Load Preset</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_5">
+        <widget class="QPushButton" name="exportButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string>Export Data</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_10">
+        <widget class="QPushButton" name="optionsButton">
          <property name="text">
           <string>Options</string>
          </property>
@@ -321,9 +289,9 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>pushButton_2</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_3</tabstop>
+  <tabstop>addButton</tabstop>
+  <tabstop>loadButton</tabstop>
+  <tabstop>updateButton</tabstop>
   <tabstop>lineEdit</tabstop>
   <tabstop>tabWidget</tabstop>
  </tabstops>
@@ -332,7 +300,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>base</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -348,7 +316,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>base</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

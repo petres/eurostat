@@ -18,10 +18,10 @@ class ExportDialog(QtGui.QDialog):
     def __init__(self, mainWin):
         QtGui.QDialog.__init__(self, mainWin)
         self.main = mainWin
-        self.ui = export.Ui_Dialog()
+        self.ui = export.Ui_exportDialog()
         self.ui.setupUi(self)
 
-        self.ui.emptyEntry.setText(Settings.exportEmptyCellSign)
+        self.ui.emptyEntryEdit.setText(Settings.exportEmptyCellSign)
 
         self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
         self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._doExport)
@@ -64,10 +64,10 @@ class ExportDialog(QtGui.QDialog):
         sorting = {}
 
         ## Empty text setting
-        Settings.exportEmptyCellSign = str(self.ui.emptyEntry.text())
+        Settings.exportEmptyCellSign = str(self.ui.emptyEntryEdit.text())
 
         ## Sorting setting
-        timeSorting = str(self.ui.timeSorting.currentText())
+        timeSorting = str(self.ui.timeSortingCombo.currentText())
         if timeSorting == "ascending":
             sorting["time"] = QtCore.Qt.AscendingOrder
         elif timeSorting == "descending":

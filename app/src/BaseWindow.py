@@ -20,7 +20,7 @@ import base
 class BaseWindow(QtGui.QDialog):
     def __init__(self, parent=None):
         super(QtGui.QDialog, self).__init__(parent)
-        self.ui = base.Ui_Dialog()
+        self.ui = base.Ui_base()
         self.ui.setupUi(self)
 
         # init variables
@@ -34,15 +34,15 @@ class BaseWindow(QtGui.QDialog):
         self.updateDBList() 
 
         # connect buttons
-        self.connect(self.ui.buttonBox, QtCore.SIGNAL("close()"),self.close)
-        self.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"),self._loadDB)
-        self.connect(self.ui.pushButton_2,QtCore.SIGNAL("clicked()"),self._addDB)
-        self.connect(self.ui.pushButton_3,QtCore.SIGNAL("clicked()"),self._updateDBfile)
-        self.connect(self.ui.pushButton_9,QtCore.SIGNAL("clicked()"),self._removeDBfile)
+        self.connect(self.ui.buttonBox, QtCore.SIGNAL("close()"), self.close)
+        self.connect(self.ui.loadButton, QtCore.SIGNAL("clicked()"), self._loadDB)
+        self.connect(self.ui.addButton, QtCore.SIGNAL("clicked()"), self._addDB)
+        self.connect(self.ui.updateButton, QtCore.SIGNAL("clicked()"), self._updateDBfile)
+        self.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self._removeDBfile)
 
-        #self.connect(self.ui.pushButton_4,QtCore.SIGNAL("clicked()"),self._loadPreset)
-        self.connect(self.ui.pushButton_5,QtCore.SIGNAL("clicked()"),self._initExport)
-        #self.connect(self.ui.pushButton_10,QtCore.SIGNAL("clicked()"),self._optionDialog)
+        #self.connect(self.ui.loadPresetButton, QtCore.SIGNAL("clicked()"), self._loadPreset)
+        self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._initExport)
+        #self.connect(self.ui.optionsButton, QtCore.SIGNAL("clicked()"), self._optionDialog)
 
 
     def updateDBList(self):
@@ -50,22 +50,22 @@ class BaseWindow(QtGui.QDialog):
         tsv_names = f.getFileList()
 
         #---addjust List ----
-        self.ui.tableWidget_3.setRowCount(len(tsv_names))
+        self.ui.databaseTable.setRowCount(len(tsv_names))
 
 
-        #self.ui.tableWidget_3.setHorizontalHeaderLabels(["filename","last update","size"])
+        #self.ui.databaseTable.setHorizontalHeaderLabels(["filename","last update","size"])
 
         for i, fname in enumerate(tsv_names):
-            self.ui.tableWidget_3.setItem(i, 0, QtGui.QTableWidgetItem(fname))
+            self.ui.databaseTable.setItem(i, 0, QtGui.QTableWidgetItem(fname))
             fileinfo = f.getFileInfo(fname).split(";")
-            self.ui.tableWidget_3.setItem(i, 1, QtGui.QTableWidgetItem(fileinfo[1].strip(' \t\n\r')))
-            self.ui.tableWidget_3.setItem(i, 2, QtGui.QTableWidgetItem(fileinfo[2].strip(' \t\n\r')))
+            self.ui.databaseTable.setItem(i, 1, QtGui.QTableWidgetItem(fileinfo[1].strip(' \t\n\r')))
+            self.ui.databaseTable.setItem(i, 2, QtGui.QTableWidgetItem(fileinfo[2].strip(' \t\n\r')))
 
         #adjust size
         #font= QtGui.QFont()
         #font.setPointSize(self.ListFontSize)
-        #self.ui.tableWidget_3.setFont(font)
-        #self.ui.tableWidget_3.resizeRowsToContents()
+        #self.ui.databaseTable.setFont(font)
+        #self.ui.databaseTable.resizeRowsToContents()
 
 
     def updateTab(self, metaData):
@@ -144,6 +144,10 @@ class BaseWindow(QtGui.QDialog):
         self.ui.tabWidget.removeTab(0)
         self.ui.tabWidget.setCurrentIndex(0)
 
+        self.ui.lcdNumber.display(0)
+        self.ui.exportButton.setEnabled(False)
+
+
 
     def _tableItemChanged(self, tableItem):
         table   = tableItem.tableWidget()
@@ -178,18 +182,19 @@ class BaseWindow(QtGui.QDialog):
             if ec == 0:
                 break
 
+        self.ui.exportButton.setEnabled(ec > 0)
         self.ui.lcdNumber.display(ec)
 
 
     def _removeDBfile(self):
         # removes selected tsv-file from data directory
-        row_sel = self.ui.tableWidget_3.currentRow()  #---get name of selected db---
+        row_sel = self.ui.databaseTable.currentRow()  #---get name of selected db---
 
         if row_sel == -1:
             print("WARNING - No Database seleced...no file removed.")  #---check for no selection
             return False
 
-        name = str(self.ui.tableWidget_3.item(row_sel,0).text())   #---get name of selected item---
+        name = str(self.ui.databaseTable.item(row_sel,0).text())   #---get name of selected item---
         f.removeTsvFile(name);
         f.delFileInfo(name)  # -4 to delete the ".tsv" string
         self.updateDBList()
@@ -199,12 +204,12 @@ class BaseWindow(QtGui.QDialog):
         #FUNCTION: IF a row(database) is selected try redownload file and update List in any case.
 
         #---get name of selected db---
-        row_sel=self.ui.tableWidget_3.currentRow()
+        row_sel=self.ui.databaseTable.currentRow()
 
         if row_sel==-1:                                                     #---check for no selection
             print("WARNING - No Database seleced...only an update of List is executed")
         else:
-            file_selected=str(self.ui.tableWidget_3.item(row_sel,0).text())  #---get name of selected item---
+            file_selected=str(self.ui.databaseTable.item(row_sel,0).text())  #---get name of selected item---
 
             if(f.downloadTsvFile(file_selected)):                               #---re-download
                 print("Update of "+file_selected+" successful")
@@ -220,13 +225,13 @@ class BaseWindow(QtGui.QDialog):
         # return False if no Database was selected
 
         #---get selected database---
-        row = self.ui.tableWidget_3.currentRow()                              #---get selected row
+        row = self.ui.databaseTable.currentRow()                              #---get selected row
 
         if row == -1:                                                          #---check for invalid selection
             f.log("WARNING - No Database seleced...")
             return False
 
-        name = str(self.ui.tableWidget_3.item(row, 0).text())         #---read selected name---
+        name = str(self.ui.databaseTable.item(row, 0).text())         #---read selected name---
         f.log("Attempt to load selected database: " + name)
 
         self.ui.label_2.setText("Actual Database: " + name)               #---update info-label above TAble
