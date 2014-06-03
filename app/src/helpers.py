@@ -14,8 +14,8 @@ import xlwt
 # ITERTOOLS FOR PERMUTATIONS
 import itertools
 
-# QT (only for constants)
-from PyQt4 import QtCore
+# QT
+from PyQt4 import QtCore, QtGui
 
 try:
     # For Python 3.0 and later
@@ -43,6 +43,48 @@ class Settings():
 
     exportEmptyCellSign = ""
     eurostatEmptyCellSign = ":"
+
+    inGui               = False
+
+#----------------------------------------------
+
+
+
+#----------------------------------------------
+#----- GENERIC ERROR BEHAVIOUR ----------------
+#----------------------------------------------
+
+class Error(Exception):
+    ERROR           = 1
+    WARNING         = 2
+
+    text = {1: "Error", 2: "Warning"}
+
+    def __init__(self, message, errorType = 1, addMessage = ""):
+        super(Exception, self).__init__(message)
+        self.errorType = errorType
+        self.message = message
+        self.addMessage = addMessage
+
+        #self.show()
+
+    def show(self):
+        self.log()
+        if Settings.inGui:
+            self.messageBox()
+
+    def log(self):
+        sys.stderr.write("--------------------\n") 
+        sys.stderr.write("--- " + Error.text[self.errorType] + ": " + self.message + "\n") 
+        if len(self.addMessage) > 0:
+            sys.stderr.write(("--- {0:" + str(len(Error.text[self.errorType])) + "}  " + self.addMessage).format("") + "\n") 
+        sys.stderr.write("--------------------\n") 
+
+    def messageBox(self):
+        messageDialog = QtGui.QMessageBox()
+        messageDialog.setWindowTitle(Error.text[self.errorType])
+        messageDialog.setText(self.message)
+        messageDialog.exec_()
 
 #----------------------------------------------
 
@@ -79,18 +121,14 @@ def downloadTsvFile(name):
         os.remove(fGzFileName)
 
         log("Download and Extraction successfull")
-        return True
 
-    except Exception as ee:   # delete the remains of partdownloads - if they exist
-        log("ERROR in Download and/or Extraction of tsv file: "+str(ee))
-        log("TIP: Check File availability at Eurostat, Database Name and the Download-URL in the Options")
-
+    except Exception as e:   # delete the remains of partdownloads - if they exist
         if os.path.isfile(fGzFileName):
             os.remove(fGzFileName)
         if os.path.isfile(fTsvFileName):
             os.remove(fTsvFileName)
 
-        return False
+        raise Error(message = "Dataset not available, check file availability at Eurostat.", addMessage = str(e))
 
 
 def removeTsvFile(name):

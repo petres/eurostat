@@ -114,7 +114,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QLineEdit" name="lineEdit">
+           <widget class="QLineEdit" name="addLineEdit">
             <property name="autoFillBackground">
              <bool>true</bool>
             </property>
@@ -122,6 +122,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="addButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Add new</string>
             </property>
@@ -292,7 +295,7 @@
   <tabstop>addButton</tabstop>
   <tabstop>loadButton</tabstop>
   <tabstop>updateButton</tabstop>
-  <tabstop>lineEdit</tabstop>
+  <tabstop>addLineEdit</tabstop>
   <tabstop>tabWidget</tabstop>
  </tabstops>
  <resources/>

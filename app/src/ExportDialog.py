@@ -86,4 +86,7 @@ class ExportDialog(QtGui.QDialog):
 
         structure["row"].extend(allCols)
 
-        f.export(self.metaData["_name"], selection = self.selection, structure = structure, fileType = "EXCEL", sorting = sorting)
+        f.export(self.metaData["_name"], selection = self.selection, 
+                    structure = structure, fileType = "EXCEL", sorting = sorting)
+
+        self.close()
