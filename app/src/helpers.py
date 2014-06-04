@@ -13,7 +13,11 @@ import xlrd
 import xlwt
 # ITERTOOLS FOR PERMUTATIONS
 import itertools
+# SIMPLEJSON
+import simplejson as sj
 
+
+import copy
 # QT
 from PyQt4 import QtCore, QtGui
 
@@ -356,6 +360,14 @@ def downloadDictFile(dictFileName):
 #----------------------------------------------
 
 def export(name, selection = None, structure = None, fileType = "EXCEL", fileName = "output/output.xls", sorting = None):
+    
+    options = { "name":         name,
+                "selection":    selection,
+                "structure":    structure,
+                "fileType":     fileType,
+                "fileName":     fileName,
+                "sorting":      sorting }
+
     wb = xlwt.Workbook()
 
     data = _prepareData(name, selection)
@@ -367,25 +379,68 @@ def export(name, selection = None, structure = None, fileType = "EXCEL", fileNam
     #ws = wb.add_sheet("0", cell_overwrite_ok = True)
     ws = wb.add_sheet("Data")
 
+    ws.write(1, 0, "Name:")
+    ws.write(1, 1, name, xlwt.easyxf("font: bold on; "))
+    
+    ws.write(2, 0, "Preset:")
+    ws.write(2, 1, sj.dumps(options))
+
+    styleString = "font: bold on; pattern: pattern_fore_colour ice_blue, pattern solid; "
+    style = xlwt.easyxf(styleString)
+
+    # Row Labels Labels
     for i, label in enumerate(table["rowLabelsStructure"]):
-        ws.write(initialOffset[0], initialOffset[1] + i, label)
+        borders = xlwt.Borders()
+        borders.top = xlwt.Borders.MEDIUM
+        borders.bottom = xlwt.Borders.THIN
+        borders.left = xlwt.Borders.NO_LINE
+        if i == 0:
+            borders.left = xlwt.Borders.THIN
+        if i == len(table["rowLabelsStructure"]) - 1:
+            borders.right = xlwt.Borders.THIN
+        style.borders = borders
+        ws.write(initialOffset[0], initialOffset[1] + i, label, style)
 
     labelOffset = (len(table["colLabelsStructure"]), len(table["rowLabelsStructure"]))
 
     # Labels
     for i, labels in enumerate(table["rowLabels"]):
+        borders = xlwt.Borders()
+        if i == len(table["rowLabels"]) - 1:
+            borders.bottom = xlwt.Borders.MEDIUM
         for j, label in enumerate(labels):
-            ws.write(initialOffset[0] + i + labelOffset[0], initialOffset[1] + j, label)
+            borders.left = xlwt.Borders.NO_LINE
+            if j == 0:
+                borders.left = xlwt.Borders.MEDIUM
+            elif j == len(labels) - 1:
+                borders.right = xlwt.Borders.THIN
+            style.borders = borders
+            ws.write(initialOffset[0] + i + labelOffset[0], initialOffset[1] + j, label, copy.deepcopy(style))
 
+    
     for i, label in enumerate(table["colLabels"]):
-        ws.write(initialOffset[0], initialOffset[1] + i + labelOffset[1], label)
+        borders = xlwt.Borders()
+        borders.top = xlwt.Borders.MEDIUM
+        borders.bottom = xlwt.Borders.THIN
+        if i == len(table["colLabels"]) - 1:
+            borders.right = xlwt.Borders.MEDIUM
+        style.borders = borders
+        ws.write(initialOffset[0], initialOffset[1] + i + labelOffset[1], label, style)
 
     offset = map(add, initialOffset, labelOffset)
 
+    style = xlwt.easyxf()
     # Data
     for i, line in enumerate(table["data"]):
+        borders = xlwt.Borders()
+        if i == len(table["data"]) - 1:
+            borders.bottom = xlwt.Borders.MEDIUM
         for j, entry in enumerate(line):
-            ws.write(offset[0] + i, offset[1] + j, entry)
+            if j == len(line) - 1:
+                borders.right = xlwt.Borders.MEDIUM
+            style.borders = borders
+            #rint entry, style.borders.right
+            ws.write(offset[0] + i, offset[1] + j, entry, copy.deepcopy(style))
 
     wb.save(fileName)
 

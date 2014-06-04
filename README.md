@@ -9,6 +9,7 @@ __Dependencies__
 * Python (version > 2.6, should also work with version 3)
 * PyQt4
 * [xlwt](http://www.python-excel.org/) (still in this repository)
+* [simplejson](http://simplejson.readthedocs.org/)
 
 It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1). 
 
