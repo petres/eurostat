@@ -27,7 +27,7 @@ def main():
     # 	"geo":			["AT", "DE", "ES"]
     # 	})
     # window._initExport()
-    print sys.exit(app.exec_())
+    print(sys.exit(app.exec_()))
 
 if __name__ == "__main__":
     main()
