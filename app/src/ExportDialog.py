@@ -25,6 +25,8 @@ class ExportDialog(QtGui.QDialog):
 
         self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
         self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._doExport)
+        self.connect(self.ui.fileButton, QtCore.SIGNAL("clicked()"), self._fileSelect)
+        self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._saveAsPreset)
 
 
     def init(self, metaData, selection):
@@ -46,6 +48,8 @@ class ExportDialog(QtGui.QDialog):
         self.ui.colCombo.setCurrentIndex(1)
         self.ui.colCombo.setCurrentIndex(0)
 
+        self.ui.fileEdit.setText(Settings.exportFile.replace("##NAME##", self.metaData["_name"]))
+
 
     def _comboChanged(self, text):
         sender = self.sender()
@@ -58,8 +62,22 @@ class ExportDialog(QtGui.QDialog):
                 combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[comboType]["values"]))
             selectedEntries.append(combo.currentText())
 
+    def _fileSelect(self):
+        fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", self.ui.fileEdit.text(), 
+                                "Excel (*.xls)", options = QtGui.QFileDialog.DontConfirmOverwrite)
+        if fileName != "":
+            self.ui.fileEdit.setText(fileName)
 
-    def _doExport(self): 
+    def _saveAsPreset(self):
+        fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", Settings.presetFile.replace("##NAME##", self.metaData["_name"]), 
+                                "Excel (*.xls)", options = QtGui.QFileDialog.DontConfirmOverwrite)
+
+        if fileName == "":
+            return
+
+        f.savePreset(fileName, self._getOptions())
+
+    def _getOptions(self):
         structure = {}
         sorting = {}
 
@@ -86,7 +104,17 @@ class ExportDialog(QtGui.QDialog):
 
         structure["row"].extend(allCols)
 
-        f.export(self.metaData["_name"], selection = self.selection, 
-                    structure = structure, fileType = "EXCEL", sorting = sorting)
+        options = { "name":         self.metaData["_name"],
+                    "selection":    self.selection,
+                    "structure":    structure,
+                    "fileType":     "EXCEL",
+                    "fileName":     str(self.ui.fileEdit.text()),
+                    "sorting":      sorting,
+                    "emptyCellSign": str(self.ui.emptyEntryEdit.text())}
 
-        self.close()
+        return options
+
+    def _doExport(self): 
+        f.export(self._getOptions())
+
+        #self.close()

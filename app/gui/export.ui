@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>409</width>
-    <height>296</height>
+    <width>460</width>
+    <height>376</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Export</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <widget class="QGroupBox" name="structureGroupBox">
      <property name="minimumSize">
@@ -56,6 +56,12 @@
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="colLabel">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="text">
            <string>in Columns</string>
           </property>
@@ -77,6 +83,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <layout class="QFormLayout" name="formLayout_2">
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        </property>
         <item row="0" column="0">
          <widget class="QLabel" name="emptyEntryLabel">
           <property name="text">
@@ -86,15 +95,14 @@
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="timeSortingLabel">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="text">
            <string>Time Sorting</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="emptyEntryEdit">
-          <property name="autoFillBackground">
-           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -110,6 +118,53 @@
             <string>descending</string>
            </property>
           </item>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="emptyEntryEdit">
+          <property name="autoFillBackground">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="fileGroupBox">
+     <property name="title">
+      <string>File</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="fileLabel">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Location</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="fileEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="fileButton">
+          <property name="text">
+           <string>Choose ...</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -129,6 +184,13 @@
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="standardButtons">
         <set>QDialogButtonBox::Cancel</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="presetButton">
+       <property name="text">
+        <string>Save as Preset ...</string>
        </property>
       </widget>
      </item>

@@ -17,6 +17,7 @@ import helpers as f
 # EXPORT UI
 import base
 
+
 class BaseWindow(QtGui.QDialog):
     def __init__(self, parent=None):
         super(QtGui.QDialog, self).__init__(parent)
@@ -40,6 +41,8 @@ class BaseWindow(QtGui.QDialog):
         self.connect(self.ui.updateButton, QtCore.SIGNAL("clicked()"), self._updateDBfile)
         self.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self._removeDBfile)
 
+        self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._runPreset)
+
         self.connect(self.ui.addLineEdit, QtCore.SIGNAL("textChanged(const QString &)"), self._addLineEditChanged)
 
         #self.connect(self.ui.loadPresetButton, QtCore.SIGNAL("clicked()"), self._loadPreset)
@@ -47,6 +50,7 @@ class BaseWindow(QtGui.QDialog):
         #self.connect(self.ui.optionsButton, QtCore.SIGNAL("clicked()"), self._optionDialog)
 
         Settings.inGui = True
+
 
     def updateDBList(self):
         #---read filenames in data-directory ---
@@ -245,11 +249,13 @@ class BaseWindow(QtGui.QDialog):
         #---update Tabs = Filling tabs with info from class arrays ---
         self.updateTab(metaData)
 
+
     def _addLineEditChanged(self, text):
         if len(text) > 0:
             self.ui.addButton.setEnabled(True)
         else:
             self.ui.addButton.setEnabled(False)
+
 
     def _addDB(self):    
         # download new database and update lst
@@ -269,7 +275,6 @@ class BaseWindow(QtGui.QDialog):
         try:
             f.downloadTsvFile(fileName)
         except f.Error as e:
-            e.show()
             return
 
         self.ui.addLineEdit.clear()    # clear line edit
@@ -293,6 +298,15 @@ class BaseWindow(QtGui.QDialog):
         dialog = ExportDialog(self)
         dialog.init(self.metaData, selection)
         dialog.show()
+
+    def _runPreset(self):
+        fileName = QtGui.QFileDialog.getOpenFileName(self, "Run Preset", Settings.presetPath, 
+                                "Presets (*.preset)")
+
+        if fileName == "":
+            return
+
+        f.runPreset(fileName)
 
 
     def getSelectedCats(self):

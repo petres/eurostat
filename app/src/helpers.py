@@ -38,7 +38,7 @@ from operator import add
 class Settings():
     dataPath            = "data/"
     dictPath            = "data/dict/"
-    outputPath          = "output/"
+    presetPath          = "presets/"
 
     dictURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
     bulkURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
@@ -47,6 +47,9 @@ class Settings():
 
     exportEmptyCellSign = ""
     eurostatEmptyCellSign = ":"
+
+    exportFile          = os.path.join('output', '##NAME##.xls')
+    presetFile          = os.path.join('presets', '##NAME##.preset')
 
     inGui               = False
 
@@ -70,7 +73,7 @@ class Error(Exception):
         self.message = message
         self.addMessage = addMessage
 
-        #self.show()
+        self.show()
 
     def show(self):
         self.log()
@@ -356,34 +359,53 @@ def downloadDictFile(dictFileName):
 
 
 #----------------------------------------------
-#----- EXPRT ----------------------------------
+#----- PRESETS --------------------------------
 #----------------------------------------------
 
-def export(name, selection = None, structure = None, fileType = "EXCEL", fileName = "output/output.xls", sorting = None):
-    
-    options = { "name":         name,
-                "selection":    selection,
-                "structure":    structure,
-                "fileType":     fileType,
-                "fileName":     fileName,
-                "sorting":      sorting }
+def savePreset(fileName, options):
+    with open(fileName, 'w') as outfile:
+        outfile.write(getStringOfPreset(options))
 
+def getStringOfPreset(options):
+    return sj.dumps(options)
+
+def getPresetFromFile(fileName):
+    with open(fileName, 'r') as presetFile:
+        return sj.loads(presetFile.read())
+
+def runPreset(fileName):
+    export(getPresetFromFile(fileName))
+
+#----------------------------------------------
+
+
+
+#----------------------------------------------
+#----- EXPORT ---------------------------------
+#----------------------------------------------
+
+def export(options):
     wb = xlwt.Workbook()
 
-    data = _prepareData(name, selection)
-
-    initialOffset = (5, 0)
-
-    table = _prepareTable(data, structure, selection, sorting)
+    data = _prepareData(options["name"], options["selection"])
 
     #ws = wb.add_sheet("0", cell_overwrite_ok = True)
     ws = wb.add_sheet("Data")
 
     ws.write(1, 0, "Name:")
-    ws.write(1, 1, name, xlwt.easyxf("font: bold on; "))
+    ws.write(1, 1, options["name"], xlwt.easyxf("font: bold on; "))
     
     ws.write(2, 0, "Preset:")
-    ws.write(2, 1, sj.dumps(options))
+    ws.write(2, 1, getStringOfPreset(options))
+
+    table = _prepareTable(data, options["structure"], options["selection"], options["sorting"], options["emptyCellSign"])
+    _writeWorksheet(table, ws)
+
+    wb.save(options["fileName"])
+
+
+def _writeWorksheet(table, ws):
+    initialOffset = (5, 0)
 
     styleString = "font: bold on; pattern: pattern_fore_colour ice_blue, pattern solid; "
     style = xlwt.easyxf(styleString)
@@ -395,7 +417,7 @@ def export(name, selection = None, structure = None, fileType = "EXCEL", fileNam
         borders.bottom = xlwt.Borders.THIN
         borders.left = xlwt.Borders.NO_LINE
         if i == 0:
-            borders.left = xlwt.Borders.THIN
+            borders.left = xlwt.Borders.MEDIUM
         if i == len(table["rowLabelsStructure"]) - 1:
             borders.right = xlwt.Borders.THIN
         style.borders = borders
@@ -442,10 +464,8 @@ def export(name, selection = None, structure = None, fileType = "EXCEL", fileNam
             #rint entry, style.borders.right
             ws.write(offset[0] + i, offset[1] + j, entry, copy.deepcopy(style))
 
-    wb.save(fileName)
 
-
-def _prepareTable(data, structure, selection, sorting = {}, fixed = {}):
+def _prepareTable(data, structure, selection, sorting = {}, fixed = {}, emptyCellSign = Settings.exportEmptyCellSign):
     # SORTING
     for entry in sorting:
         if sorting[entry] == QtCore.Qt.DescendingOrder:
@@ -484,7 +504,7 @@ def _prepareTable(data, structure, selection, sorting = {}, fixed = {}):
                 elif bc in fixed:
                     keyEntry = fixed[bc]
                 else:
-                    raise Exception('Wow Wow Wow, thats not good, keylist and dict differ, what have you done?')
+                    raise Error('Wow Wow Wow, thats not good, keylist and dict differ, what have you done?')
 
                 keyList.append(keyEntry)
 
@@ -541,6 +561,9 @@ def _prepareData(name, selection = None):
 
                     data["data"][key] = entry
     return data
+
+#----------------------------------------------
+
 
 
 #----------------------------------------------

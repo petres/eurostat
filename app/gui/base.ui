@@ -199,9 +199,15 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="loadPresetButton">
+        <widget class="QPushButton" name="presetButton">
+         <property name="minimumSize">
+          <size>
+           <width>135</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
-          <string>Load Preset</string>
+          <string>Run Preset ...</string>
          </property>
         </widget>
        </item>
@@ -261,7 +267,7 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>135</width>
+           <width>140</width>
            <height>0</height>
           </size>
          </property>
