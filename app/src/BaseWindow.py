@@ -45,7 +45,6 @@ class BaseWindow(QtGui.QDialog):
 
         self.connect(self.ui.addLineEdit, QtCore.SIGNAL("textChanged(const QString &)"), self._addLineEditChanged)
 
-        #self.connect(self.ui.loadPresetButton, QtCore.SIGNAL("clicked()"), self._loadPreset)
         self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._initExport)
         #self.connect(self.ui.optionsButton, QtCore.SIGNAL("clicked()"), self._optionDialog)
 
@@ -54,15 +53,12 @@ class BaseWindow(QtGui.QDialog):
 
     def updateDBList(self):
         #---read filenames in data-directory ---
-        tsv_names = f.getFileList()
+        tsvNames = f.getFileList()
 
         #---addjust List ----
-        self.ui.databaseTable.setRowCount(len(tsv_names))
+        self.ui.databaseTable.setRowCount(len(tsvNames))
 
-
-        #self.ui.databaseTable.setHorizontalHeaderLabels(["filename","last update","size"])
-
-        for i, fname in enumerate(tsv_names):
+        for i, fname in enumerate(tsvNames):
             self.ui.databaseTable.setItem(i, 0, QtGui.QTableWidgetItem(fname))
             fileinfo = f.getFileInfo(fname).split(";")
             self.ui.databaseTable.setItem(i, 1, QtGui.QTableWidgetItem(fileinfo[1].strip(' \t\n\r')))
@@ -78,8 +74,6 @@ class BaseWindow(QtGui.QDialog):
     def updateTab(self, metaData):
         #Read class arrays (self.cl_...) and create filling array.
         #The filling array is equal to the displayed array in the big Table
-
-
         #---create TAB titles--- incl TIME (pos 0) and GEO (last pos) PLUS check DICt
         tabnames = []                 # tabnames are all Titles (geo,time,unit,curr,...)
         for entry in metaData["_cols"]:
@@ -155,7 +149,6 @@ class BaseWindow(QtGui.QDialog):
         self.ui.exportButton.setEnabled(False)
 
 
-
     def _tableItemChanged(self, tableItem):
         table   = tableItem.tableWidget()
         if not self.ignoreItemChanges:
@@ -195,13 +188,13 @@ class BaseWindow(QtGui.QDialog):
 
     def _removeDBfile(self):
         # removes selected tsv-file from data directory
-        row_sel = self.ui.databaseTable.currentRow()  #---get name of selected db---
+        row = self.ui.databaseTable.currentRow()  #---get name of selected db---
 
-        if row_sel == -1:
-            print("WARNING - No Database seleced...no file removed.")  #---check for no selection
+        if row == -1:
+            f.warn("WARNING - No Database seleced...no file removed.")  #---check for no selection
             return False
 
-        name = str(self.ui.databaseTable.item(row_sel,0).text())   #---get name of selected item---
+        name = str(self.ui.databaseTable.item(row ,0).text())   #---get name of selected item---
         f.removeTsvFile(name);
         f.delFileInfo(name)  # -4 to delete the ".tsv" string
         self.updateDBList()
@@ -211,21 +204,45 @@ class BaseWindow(QtGui.QDialog):
         #FUNCTION: IF a row(database) is selected try redownload file and update List in any case.
 
         #---get name of selected db---
-        row_sel=self.ui.databaseTable.currentRow()
+        row = self.ui.databaseTable.currentRow()
 
-        if row_sel==-1:                                                     #---check for no selection
-            print("WARNING - No Database seleced...only an update of List is executed")
+        if row == -1:                                                     #---check for no selection
+            f.warn("WARNING - No Database seleced...only an update of List is executed")
         else:
-            file_selected=str(self.ui.databaseTable.item(row_sel,0).text())  #---get name of selected item---
+            fileName = str(self.ui.databaseTable.item(row, 0).text())  #---get name of selected item---
+            self._downloadDB(fileName)
 
-            if(f.downloadTsvFile(file_selected)):                               #---re-download
-                print("Update of "+file_selected+" successful")
-                f.addFileInfo(file_selected)                   # --- get current file info
-            else:
-                print("ERROR in downloading the file: " + file_selected + ".tsv")
+        
+
+
+    def _addDB(self):    
+        # download new database and update lst
+        # returns FALSE if download of tsv-File fails or file is already in the List
+
+        fileName = str(self.ui.addLineEdit.displayText())    #---GET FILENAME from LineEdit
+        fileName = fileName.replace(" ","")               # deleting unintentionally space-characers
+
+        #---CHECK - is file already in Database?
+        if fileName in f.getFileList():
+            e = f.Error("tsv File already exists - Press Update button to redownload file", errorType = f.Error.WARNING)
+            e.show()
+            self.ui.addLineEdit.clear()
+            return
+
+        self._downloadDB(fileName)
+
+
+
+    def _downloadDB(self, fileName):
+        try:
+            f.downloadTsvFile(fileName)
+        except f.Error as e:
+            return False
+
+        f.addFileInfo(fileName) 
 
         self.updateDBList()
-
+        return True;
 
     def _loadDB(self):   
         # loading the selected  database
@@ -235,7 +252,7 @@ class BaseWindow(QtGui.QDialog):
         row = self.ui.databaseTable.currentRow()                              #---get selected row
 
         if row == -1:                                                          #---check for invalid selection
-            f.log("WARNING - No Database seleced...")
+            f.warn("WARNING - No Database seleced...")
             return False
 
         name = str(self.ui.databaseTable.item(row, 0).text())         #---read selected name---
@@ -257,38 +274,11 @@ class BaseWindow(QtGui.QDialog):
             self.ui.addButton.setEnabled(False)
 
 
-    def _addDB(self):    
-        # download new database and update lst
-        # returns FALSE if download of tsv-File fails or file is already in the List
-
-        fileName = str(self.ui.addLineEdit.displayText())    #---GET FILENAME from LineEdit
-        fileName = fileName.replace(" ","")               # deleting unintentionally space-characers
-
-        #---CHECK - is file already in Database?
-        if fileName in f.getFileList():
-            e = f.Error("tsv File already exists - Press Update button to redownload file", errorType = f.Error.WARNING)
-            e.show()
-            self.ui.addLineEdit.clear()
-            return
-
-        #---try to download and add file in db-directory ----
-        try:
-            f.downloadTsvFile(fileName)
-        except f.Error as e:
-            return
-
-        self.ui.addLineEdit.clear()    # clear line edit
-        f.addFileInfo(fileName) # html-read the update-date and file size of the downloaded file
-        self.updateDBList()         # update list to show new db
-
-        f.log("Download successful")
-
-
     def _initExport(self):
         #--check if in each Tab at least one is selected---
         checkLCD = self.ui.lcdNumber.value()
         if checkLCD == 0:
-            f.log("WARNING: For an Export procedure at least one item in each Tab need to be selected!!")
+            f.warn("WARNING: For an Export procedure at least one item in each Tab need to be selected!!")
             return
 
         #---write box selection in CLass Array ---
@@ -300,10 +290,10 @@ class BaseWindow(QtGui.QDialog):
         dialog.show()
 
     def _runPreset(self):
-        fileName = QtGui.QFileDialog.getOpenFileName(self, "Run Preset", Settings.presetPath, 
-                                "Presets (*.preset)")
+        fileName = QtGui.QFileDialog.getOpenFileName(self, "Run Preset", Settings.presetPath, "Presets (*.preset)")
 
         if fileName == "":
+            f.warn("No file selected.")
             return
 
         f.runPreset(fileName)

@@ -62,20 +62,23 @@ class ExportDialog(QtGui.QDialog):
                 combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[comboType]["values"]))
             selectedEntries.append(combo.currentText())
 
+
     def _fileSelect(self):
         fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", self.ui.fileEdit.text(), 
                                 "Excel (*.xls)", options = QtGui.QFileDialog.DontConfirmOverwrite)
         if fileName != "":
             self.ui.fileEdit.setText(fileName)
 
+
     def _saveAsPreset(self):
         fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", Settings.presetFile.replace("##NAME##", self.metaData["_name"]), 
-                                "Excel (*.xls)", options = QtGui.QFileDialog.DontConfirmOverwrite)
+                                "Presets (*.preset)", options = QtGui.QFileDialog.DontConfirmOverwrite)
 
         if fileName == "":
             return
 
         f.savePreset(fileName, self._getOptions())
+
 
     def _getOptions(self):
         structure = {}
@@ -114,7 +117,11 @@ class ExportDialog(QtGui.QDialog):
 
         return options
 
-    def _doExport(self): 
-        f.export(self._getOptions())
 
+    def _doExport(self):
+        #p = QtGui.QProgressDialog("Exporting...", "Abort", 0, 10, self);
+        #p.open()
+        #p.setValue(4)
+        f.export(self._getOptions())
+        #p.close()
         #self.close()

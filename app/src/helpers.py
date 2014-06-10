@@ -310,7 +310,7 @@ def findInDict(title, shorty):
                     return str(longy)
         return "n.a."
     except:
-        log("ERROR - in Dic File opening: " + dictFileName)
+        error("in Dic File opening: " + dictFileName)
         return False
 
 
@@ -343,7 +343,7 @@ def downloadDictFile(dictFileName):
         response = urlopen(fileURL)
         log("Dictionary download OK")
     except:
-        log("ERROR in downloading Dictionary " + dictFileName)
+        error("Downloading Dictionary " + dictFileName)
         return False
 
     try:
@@ -351,7 +351,7 @@ def downloadDictFile(dictFileName):
             # saving download
             outfile.write(response.read())
     except:
-        log("ERROR in saving Dictionary " + dictFileName)
+        error("Saving Dictionary " + dictFileName)
         return False
 
 #----------------------------------------------
@@ -571,6 +571,14 @@ def _prepareData(name, selection = None):
 #----------------------------------------------
 
 def log(message):
-    print(message)
+    print("LOG: " + message)
+
+
+def warn(message):
+    print("WARNING: " + message)
+
+
+def error(message):
+    print("ERROR: " + message)
 
 #----------------------------------------------
