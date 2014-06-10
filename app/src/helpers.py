@@ -376,6 +376,12 @@ def getPresetFromFile(fileName):
 def runPreset(fileName):
     export(getPresetFromFile(fileName))
 
+def runPresetsFromCL(fileList):
+    for i, file in enumerate(fileList):
+        log(str(i+1) + "/" + str(len(fileList)) + " Executing preset of file " + file.name + " ... ")
+        export(sj.loads(file.read()))
+        log("DONE")
+
 #----------------------------------------------
 
 
@@ -571,7 +577,7 @@ def _prepareData(name, selection = None):
 #----------------------------------------------
 
 def log(message):
-    print("LOG: " + message)
+    print(message)
 
 
 def warn(message):

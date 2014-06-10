@@ -1,3 +1,3 @@
 #!/bin/bash
 cd "$(dirname "$0")"
-python src/main.py $*
+python app/src/main.py $*
