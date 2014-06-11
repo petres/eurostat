@@ -14,15 +14,20 @@ dirname = os.path.dirname(abspath)
 os.chdir(os.path.join(dirname, "..", ".."))
 
 
-parser = argparse.ArgumentParser(description='Open a GUI or process preset files directly.')
-parser.add_argument('--presets', '-p', metavar='presets', type = argparse.FileType('r'), nargs='+',
-                   help='presets to execute')
+parser = argparse.ArgumentParser(description = 'Eurostat Bulk Downloader: This program allows the download of \
+                                  eurostat bulk datasets and the export it afterward filtered and sorted in other file formats \
+                                  (for example excel). Without any arguments a GUI will be opened where the source and the export can be configured. \
+                                  To allow better handling of recurrent tasks, presets can be created by the GUI. These presets can be \
+                                  executed in the GUI or directly by adding them to the arguments.')
+
+parser.add_argument('--presets', '-p', metavar = 'preset', type = argparse.FileType('r'), nargs='+',
+                   help='Add presets which will be executed. No GUI will be opened!')
 
 
 def main():
     args = parser.parse_args()
     if args.presets is not None:
-        f.runPresetsFromCL(args.presets)
+        f.runPresetsFromCL(args.preset)
         exit()
     app = QtGui.QApplication(sys.argv)
     window = BaseWindow()
