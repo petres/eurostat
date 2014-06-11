@@ -16,6 +16,8 @@ It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1).
 ### WIKI
 If you want to know more about planned features or need a description please read the [Wiki page](http://github.com/petres/eurostat/wiki) of this project.
 
+___
+
 ### Get it
 #### GIT
 Some libraries are included via submodules, therefore the repo has either to be cloned recursively with 
@@ -28,6 +30,8 @@ In the near future we will provide `zip` and `tar.gz` files.
 
 #### Executable
 Maybe at some point in the unknown future.
+
+___
 
 ### Run it
 #### Windows
