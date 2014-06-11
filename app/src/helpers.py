@@ -3,7 +3,7 @@
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "xlwt"))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "simpejson"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "simplejson"))
 
 # CSV (reading csv/tsv files)
 import csv
