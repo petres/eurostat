@@ -83,11 +83,11 @@ class Error(Exception):
             self.messageBox()
 
     def log(self):
-        sys.stderr.write("--------------------\n") 
-        sys.stderr.write("--- " + Error.text[self.errorType] + ": " + self.message + "\n") 
+        sys.stderr.write("--------------------\n")
+        sys.stderr.write("--- " + Error.text[self.errorType] + ": " + self.message + "\n")
         if len(self.addMessage) > 0:
-            sys.stderr.write(("--- {0:" + str(len(Error.text[self.errorType])) + "}  " + self.addMessage).format("") + "\n") 
-        sys.stderr.write("--------------------\n") 
+            sys.stderr.write(("--- {0:" + str(len(Error.text[self.errorType])) + "}  " + self.addMessage).format("") + "\n")
+        sys.stderr.write("--------------------\n")
 
     def messageBox(self):
         messageDialog = QtGui.QMessageBox()
@@ -331,10 +331,10 @@ def checkDictFile(fileName):
         return True
     else:
         log("dictionary NOT found ... start download attempt")
-        return downloadDictFile(dictFileName) 
+        return downloadDictFile(dictFileName)
 
 
-def downloadDictFile(dictFileName):   
+def downloadDictFile(dictFileName):
     # download of eurostat dictionary file
     #return True if download OK
     #return False otherwise
@@ -402,7 +402,7 @@ def export(options):
 
     ws.write(1, 0, "Name:")
     ws.write(1, 1, options["name"], xlwt.easyxf("font: bold on; "))
-    
+
     ws.write(2, 0, "Preset:")
     ws.write(2, 1, getStringOfPreset(options))
 
@@ -418,7 +418,7 @@ def _writeWorksheet(table, ws):
     styleString = "font: bold on; pattern: pattern_fore_colour ice_blue, pattern solid; "
     style = xlwt.easyxf(styleString)
 
-    # Row Labels Labels
+    # Row Labels Labelszzw
     for i, label in enumerate(table["rowLabelsStructure"]):
         borders = xlwt.Borders()
         borders.top = xlwt.Borders.MEDIUM
@@ -447,7 +447,7 @@ def _writeWorksheet(table, ws):
             style.borders = borders
             ws.write(initialOffset[0] + i + labelOffset[0], initialOffset[1] + j, label, copy.deepcopy(style))
 
-    
+
     for i, label in enumerate(table["colLabels"]):
         borders = xlwt.Borders()
         borders.top = xlwt.Borders.MEDIUM
@@ -490,7 +490,7 @@ def _prepareTable(data, structure, selection, sorting = {}, fixed = {}, emptyCel
         rows.append(selection[i])
 
     baseCols = data["cols"]
-    
+
     colP = list(itertools.product(*cols))
     rowP = list(itertools.product(*rows))
 
@@ -546,7 +546,7 @@ def _prepareData(name, selection = None):
                 inSelection = True
                 keyList = []
                 tmp = row[0].split(",")                     # row eg. CPI00_EUR,A_B,B1G,BG
-                
+
                 for k, tt in enumerate(tmp):
                     # FILTERING
                     if (selection is not None) and (tt.strip() not in selection[data["cols"][k]]):
