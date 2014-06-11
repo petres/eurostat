@@ -1,28 +1,36 @@
 ## eurostat bulk exporter
 
 ### About
-
 This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/). The downloaded datasets can be filtered, sorted and exported to Excel files. Other export file types will follow (csv, ...). In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports.
 
-__Dependencies__
-
-* Python (version > 2.6, should also work with version 3)
-* PyQt4
+#### Dependencies
+* [Python](https://www.python.org/) > 2.6  (should also work with version 3) | Programming Language
+* [PyQt](http://www.riverbankcomputing.com/software/pyqt) 4 | GUI 
 
 It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1). 
 
-__Other Used Libraries__
-
+#### Submodule Libraries
 * [xlwt](http://www.python-excel.org/) | Writing Excel Files
 * [simplejson](http://simplejson.readthedocs.org/) | Writing/Reading JSON
 
-These libraries are included via submodules, therefore the repo has either to be cloned recursively with `git clone --recursive https://github.com/petres/eurostat` or the submodules have to be initialized with the command `git submodule update --init`. 
+### WIKI
+If you want to know more about planned features or need a description please read the [Wiki page](http://github.com/petres/eurostat/wiki) of this project.
 
+### Get it
+#### GIT
+Some libraries are included via submodules, therefore the repo has either to be cloned recursively with 
+`git clone --recursive https://github.com/petres/eurostat` 
+or the submodules have to be initialized with the command 
+`git submodule update --init`. 
 
+#### Compressed Files
+In the near future we will provide `zip` and `tar.gz` files.
+
+#### Executable
+Maybe at some point in the unknown future.
 
 ### Run it
-__Windows__
-
+#### Windows
 1.  Adjust the paths in the `app\utils\config.bat` file.
 1.  Convert the `*.ui` files with the script `app\utils\convertUI.bat`.
 1.  Call `run.bat`.
@@ -33,8 +41,7 @@ set python = "D:\some\where\Portable Python\App\python.exe"
 set pyuic  = "D:\some\where\Portable Python\App\Lib\site-packages\PyQt4\uic\pyuic.py"
 ```
 
-__Linux__
-
+#### Linux
 It is assumed that `python` and `pyuic4` are in your `PATH` environment variable and `make` build utility is installed.
 
 1.  Convert the `*.ui` files by running `make` in the `app/` path.
