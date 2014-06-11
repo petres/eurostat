@@ -8,7 +8,7 @@ import csv
 # GZIP (uncompress .gz files)
 import gzip
 # EXCEL READ
-import xlrd
+#import xlrd
 # EXCEL WRITE
 import xlwt
 # ITERTOOLS FOR PERMUTATIONS
