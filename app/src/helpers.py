@@ -393,28 +393,62 @@ def runPresetsFromCL(fileList):
 #----------------------------------------------
 
 def export(options):
+
+    structure = options["structure"]
+    selection = options["selection"]
+
     wb = xlwt.Workbook()
 
-    data = _prepareData(options["name"], options["selection"])
+    data = _prepareData(options["name"], selection)
 
-    #ws = wb.add_sheet("0", cell_overwrite_ok = True)
-    ws = wb.add_sheet("Data")
+    # sorting
+    _sortingBeforeExport(selection, options["sorting"])
 
-    ws.write(1, 0, "Name:")
-    ws.write(1, 1, options["name"], xlwt.easyxf("font: bold on; "))
 
-    ws.write(2, 0, "Preset:")
-    ws.write(2, 1, getStringOfPreset(options))
+    if len(structure["tab"]) == 0:
+        ws = wb.add_sheet("Data")
 
-    table = _prepareTable(data, options["structure"], options["selection"], options["sorting"], options["emptyCellSign"])
-    _writeWorksheet(table, ws)
+        ws.write(1, 0, "Name:")
+        ws.write(1, 1, options["name"], xlwt.easyxf("font: bold on; "))
+
+        ws.write(2, 0, "Preset:")
+        ws.write(2, 1, getStringOfPreset(options))
+
+        table = _prepareTable(data, structure, selection, emptyCellSign = options["emptyCellSign"])
+        _writeWorksheet(table, ws)
+    else:
+        tab = []
+        for i in structure["tab"]:
+            tab.append(selection[i])
+
+        tabP = list(itertools.product(*tab))
+
+        for t in tabP:
+            tabName = ""
+            for i in t:
+                tabName += str(i)
+            ws = wb.add_sheet(tabName)
+            fixed = {}
+            for i, j in enumerate(structure["tab"]):
+                fixed[j] = t[i]
+            table = _prepareTable(data, structure, selection, fixed = fixed, emptyCellSign = options["emptyCellSign"])
+            _writeWorksheet(table, ws)
+
+
+    
 
     wb.save(options["fileName"])
 
 
-def _writeWorksheet(table, ws):
-    initialOffset = (5, 0)
+def _sortingBeforeExport(selection, sorting = {}):
+    for entry in sorting:
+        if sorting[entry] == QtCore.Qt.DescendingOrder:
+            selection[entry] = sorted(selection[entry], reverse = True)
+        elif sorting[entry] == QtCore.Qt.AscendingOrder:
+            selection[entry] = sorted(selection[entry])
 
+
+def _writeWorksheet(table, ws, initialOffset = (5, 0)):
     styleString = "font: bold on; pattern: pattern_fore_colour ice_blue, pattern solid; "
     style = xlwt.easyxf(styleString)
 
@@ -447,7 +481,6 @@ def _writeWorksheet(table, ws):
             style.borders = borders
             ws.write(initialOffset[0] + i + labelOffset[0], initialOffset[1] + j, label, copy.deepcopy(style))
 
-
     for i, label in enumerate(table["colLabels"]):
         borders = xlwt.Borders()
         borders.top = xlwt.Borders.MEDIUM
@@ -473,14 +506,7 @@ def _writeWorksheet(table, ws):
             ws.write(offset[0] + i, offset[1] + j, entry, copy.deepcopy(style))
 
 
-def _prepareTable(data, structure, selection, sorting = {}, fixed = {}, emptyCellSign = Settings.exportEmptyCellSign):
-    # SORTING
-    for entry in sorting:
-        if sorting[entry] == QtCore.Qt.DescendingOrder:
-            selection[entry] = sorted(selection[entry], reverse=True)
-        elif sorting[entry] == QtCore.Qt.AscendingOrder:
-            selection[entry] = sorted(selection[entry])
-
+def _prepareTable(data, structure, selection, fixed = {}, emptyCellSign = Settings.exportEmptyCellSign):
     cols = []
     for i in structure["col"]:
         cols.append(selection[i])

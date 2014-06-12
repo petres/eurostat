@@ -20,14 +20,14 @@ parser = argparse.ArgumentParser(description = 'Eurostat Bulk Downloader: This p
                                   To allow better handling of recurrent tasks, presets can be created by the GUI. These presets can be \
                                   executed in the GUI or directly by adding them to the arguments.')
 
-parser.add_argument('--presets', '-p', metavar = 'preset', type = argparse.FileType('r'), nargs='+',
-                   help='Add presets which will be executed. No GUI will be opened!')
+parser.add_argument('--presets', '-p', metavar = 'preset', type = argparse.FileType('r'), nargs = '+',
+                   help = 'Add presets which will be executed. No GUI will be opened!')
 
 
 def main():
     args = parser.parse_args()
     if args.presets is not None:
-        f.runPresetsFromCL(args.preset)
+        f.runPresetsFromCL(args.presets)
         exit()
     app = QtGui.QApplication(sys.argv)
     window = BaseWindow()
