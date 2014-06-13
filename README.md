@@ -1,4 +1,6 @@
 ## eurostat bulk exporter
+___
+
 
 ### About
 This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/). The downloaded datasets can be filtered, sorted and exported to Excel files. Other export file types will follow (csv, ...). In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports.
@@ -13,7 +15,7 @@ It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1).
 * [xlwt](http://www.python-excel.org/) | Writing Excel Files
 * [simplejson](http://simplejson.readthedocs.org/) | Writing/Reading JSON
 
-### WIKI
+### Wiki
 If you want to know more about planned features or need a description please read the [Wiki page](http://github.com/petres/eurostat/wiki) of this project.
 
 ___
@@ -28,7 +30,7 @@ or the submodules have to be initialized with the command
 #### Compressed Files
 In the near future we will provide `zip` and `tar.gz` files.
 
-#### Executable
+#### Executables
 Maybe at some point in the unknown future.
 
 ___
