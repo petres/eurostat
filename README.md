@@ -1,7 +1,4 @@
 ## eurostat bulk exporter
-___
-
-
 ### About
 This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/). The downloaded datasets can be filtered, sorted and exported to Excel files. Other export file types will follow (csv, ...). In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports.
 
