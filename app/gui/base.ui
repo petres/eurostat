@@ -141,7 +141,7 @@
         <enum>QLayout::SetMaximumSize</enum>
        </property>
        <item>
-        <widget class="QLabel" name="label_2">
+        <widget class="QLabel" name="database">
          <property name="text">
           <string>&quot;Databasename&quot; - Data Selection</string>
          </property>
@@ -207,7 +207,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Run Preset ...</string>
+          <string>Load Preset ...</string>
          </property>
         </widget>
        </item>
@@ -298,11 +298,17 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>addButton</tabstop>
   <tabstop>loadButton</tabstop>
   <tabstop>updateButton</tabstop>
+  <tabstop>removeButton</tabstop>
   <tabstop>addLineEdit</tabstop>
+  <tabstop>addButton</tabstop>
   <tabstop>tabWidget</tabstop>
+  <tabstop>presetButton</tabstop>
+  <tabstop>exportButton</tabstop>
+  <tabstop>optionsButton</tabstop>
+  <tabstop>buttonBox</tabstop>
+  <tabstop>databaseTable</tabstop>
  </tabstops>
  <resources/>
  <connections>

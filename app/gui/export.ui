@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>460</width>
-    <height>376</height>
+    <width>508</width>
+    <height>516</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,7 +19,7 @@
   <property name="windowTitle">
    <string>Export</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3">
+  <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
     <widget class="QGroupBox" name="structureGroupBox">
      <property name="minimumSize">
@@ -58,7 +58,7 @@
          <widget class="QLabel" name="colLabel">
           <property name="minimumSize">
            <size>
-            <width>100</width>
+            <width>120</width>
             <height>0</height>
            </size>
           </property>
@@ -78,7 +78,7 @@
    <item>
     <widget class="QGroupBox" name="optionsGroupBox">
      <property name="title">
-      <string>Options</string>
+      <string>Output Options</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
@@ -87,13 +87,41 @@
          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
         </property>
         <item row="0" column="0">
+         <widget class="QLabel" name="styleLabel">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="styleComboBox">
+          <item>
+           <property name="text">
+            <string>Eurostat</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Basic</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="1" column="0">
          <widget class="QLabel" name="emptyEntryLabel">
           <property name="text">
            <string>Empty Entry</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="emptyEntryEdit">
+          <property name="autoFillBackground">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
          <widget class="QLabel" name="timeSortingLabel">
           <property name="minimumSize">
            <size>
@@ -106,7 +134,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="2" column="1">
          <widget class="QComboBox" name="timeSortingCombo">
           <item>
            <property name="text">
@@ -120,11 +148,81 @@
           </item>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="emptyEntryEdit">
-          <property name="autoFillBackground">
-           <bool>true</bool>
+        <item row="3" column="0">
+         <widget class="QLabel" name="overwriteLabel">
+          <property name="minimumSize">
+           <size>
+            <width>120</width>
+            <height>0</height>
+           </size>
           </property>
+          <property name="text">
+           <string>Overwrite File</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QComboBox" name="overwriteComboBox">
+          <item>
+           <property name="text">
+            <string>File</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Sheet</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Data</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Preset Options</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <layout class="QFormLayout" name="formLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="timeLabel">
+          <property name="minimumSize">
+           <size>
+            <width>120</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Time</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="timeComboBox">
+          <item>
+           <property name="text">
+            <string>Include Newer Periods</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Same Time Periods</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Same Amount of Last Periods</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
@@ -144,7 +242,7 @@
          <widget class="QLabel" name="fileLabel">
           <property name="minimumSize">
            <size>
-            <width>100</width>
+            <width>120</width>
             <height>0</height>
            </size>
           </property>

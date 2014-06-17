@@ -23,6 +23,8 @@ import copy
 # QT
 from PyQt4 import QtCore, QtGui
 
+from ProgressDialog import ProgressDialog
+
 try:
     # For Python 3.0 and later
     from urllib.request import urlopen
@@ -32,6 +34,7 @@ except ImportError:
 
 from operator import add
 
+import time
 
 #----------------------------------------------
 #----- SETTINGS -------------------------------
@@ -69,18 +72,20 @@ class Error(Exception):
 
     text = {1: "Error", 2: "Warning"}
 
-    def __init__(self, message, errorType = 1, addMessage = ""):
+    def __init__(self, message, errorType = 1, addMessage = "", gui = Settings.inGui):
         super(Exception, self).__init__(message)
         self.errorType = errorType
         self.message = message
         self.addMessage = addMessage
+        self.gui = gui
+        #self.show()
 
-        self.show()
 
     def show(self):
         self.log()
         if Settings.inGui:
             self.messageBox()
+
 
     def log(self):
         sys.stderr.write("--------------------\n")
@@ -88,6 +93,7 @@ class Error(Exception):
         if len(self.addMessage) > 0:
             sys.stderr.write(("--- {0:" + str(len(Error.text[self.errorType])) + "}  " + self.addMessage).format("") + "\n")
         sys.stderr.write("--------------------\n")
+
 
     def messageBox(self):
         messageDialog = QtGui.QMessageBox()
@@ -98,21 +104,123 @@ class Error(Exception):
 #----------------------------------------------
 
 
+#----------------------------------------------
+#----- WORKERS --------------------------------
+#----------------------------------------------
+
+class Worker(QtCore.QThread):
+    error = None
+    stepTrigger = QtCore.pyqtSignal(int)
+    finishedTrigger = QtCore.pyqtSignal()
+
+    def __init__(self, name, parent = None): 
+        super(Worker, self).__init__(parent)
+        self.name = name
+
+
+    def setStep(self, i):
+        self.stepTrigger.emit(i)
+        if i < len(self.steps):
+            log('  ' + str(i+1) + '/' + str(len(self.steps)) + '  ' + self.steps[i])
+
+
+    def run(self):
+        try:
+            self.work()
+        except Error as e:
+            self.error = e
+            self.stepTrigger.emit(-1)
+
+        self.setStep(len(self.steps))
+
+
+    def startWork(self):
+        if Settings.inGui:
+            self.initGui()
+            self.stepTrigger.connect(self.updateGui)
+            self.start()
+        else:
+            self.work()
+
+
+    def updateGui(self, code):
+        if code == -1:
+            self.dialog.close()
+            self.error.show()
+        elif code == len(self.steps):
+            self.dialog.close()
+            self.finishedTrigger.emit()
+        else:
+            self.dialog.setStep(code)
+
+
+    def initGui(self):
+        self.dialog = ProgressDialog()
+        self.dialog.init(self.title, self.steps)
+        self.dialog.show()
+
+
+
+class DownloadAndExtractDbWorker(Worker):
+    title = "Get Database ... "
+    steps = ["Download File", "Extracting"]
+
+    def __init__(self, name, parent = None): 
+        Worker.__init__(self, parent)
+        self.name = name
+
+
+    def work(self):
+        self.setStep(0)
+        downloadTsvGzFile(self.name)
+        self.setStep(1)
+        extractTsvGzFile(self.name)
+
+
+
+class ExportWorker(Worker):
+    title = "Get Database ... "
+    steps = ["Download File", "Extracting"]
+
+    def __init__(self, name, parent = None): 
+        Worker.__init__(self, parent)
+        self.name = name
+
+
+    def work(self):
+        self.setStep(0)
+        downloadTsvGzFile(self.name)
+        self.setStep(1)
+        extractTsvGzFile(self.name)
+
+
+class LoadDbWorker(Worker):
+    title = "Loading Database ... "
+    steps = ["Loading Categories"]
+
+    def __init__(self, name, baseDialog, parent = None): 
+        Worker.__init__(self, parent)
+        self.name = name
+        self.baseDialog = baseDialog
+
+
+    def work(self):
+        self.setStep(0)
+        self.metaData = loadTsvFile(self.name)
+
+#----------------------------------------------
+
+
 
 #----------------------------------------------
 #----- TSV FUNCTIONS --------------------------
 #----------------------------------------------
 
-def downloadTsvFile(name):
-    #returns True if successful downloaded and extracted
-    #returns False at any error
-
-    log("START attempt to download file " + name + ".tsv from the Eurostat Webpage ... please wait")
+def downloadTsvGzFile(name):
+    log("start to download the db " + name + " from the eurostat webpage")
 
     gzFileName   = name + ".tsv.gz"
     fGzFileName  = os.path.join(Settings.dataPath, gzFileName)
-    tsvFileName  = name + ".tsv"
-    fTsvFileName = os.path.join(Settings.dataPath, tsvFileName)
 
     try:
         #---get gz file from eurostat page---
@@ -122,6 +230,32 @@ def downloadTsvFile(name):
         with open(fGzFileName, 'wb') as outfile:
             outfile.write(response.read())
 
+        # CHECK IF IT IS A GZIP FILE
+        with open(fGzFileName, 'rb') as binaryFile:
+            magicNumber = binaryFile.read(2)
+
+        if str(magicNumber.encode('hex')) != "1f8b":
+            raise Exception("Wrong file format")
+
+    except Exception as e:   # delete the remains of partdownloads - if they exist
+        if os.path.isfile(fGzFileName):
+            os.remove(fGzFileName)
+
+        raise Error(message = "Dataset not available, check file availability at Eurostat.", addMessage = str(e))
+
+    log("Download successfull")
+
+
+def extractTsvGzFile(name):
+    log("start to extract the db " + name)
+
+    gzFileName   = name + ".tsv.gz"
+    fGzFileName  = os.path.join(Settings.dataPath, gzFileName)
+
+    tsvFileName  = name + ".tsv"
+    fTsvFileName = os.path.join(Settings.dataPath, tsvFileName)
+
+    try:
         #---EXTRACT TSV.GZ.FILE---
         with open(fTsvFileName, 'w') as outfile, gzip.open(fGzFileName) as infile:
             outfile.write(infile.read())
@@ -129,15 +263,15 @@ def downloadTsvFile(name):
         #---delete gz file---
         os.remove(fGzFileName)
 
-        log("Download and Extraction successfull")
-
     except Exception as e:   # delete the remains of partdownloads - if they exist
         if os.path.isfile(fGzFileName):
             os.remove(fGzFileName)
         if os.path.isfile(fTsvFileName):
             os.remove(fTsvFileName)
 
-        raise Error(message = "Dataset not available, check file availability at Eurostat.", addMessage = str(e))
+        raise Error(message = "Extraction Error.", addMessage = str(e))
+
+    log("Extraction successfull")
 
 
 def removeTsvFile(name):
@@ -259,6 +393,8 @@ def addFileInfo(fname):
     #---read html data and search filename---
     fileURL = Settings.eurostatURLchar + fname[0]  # the url is sorted e.g. it ends with "a" for a List of files that start with "a"
     response = urlopen(fileURL)
+
+    info = None;
 
     for line in response:
         if fname in line:
@@ -433,9 +569,6 @@ def export(options):
                 fixed[j] = t[i]
             table = _prepareTable(data, structure, selection, fixed = fixed, emptyCellSign = options["emptyCellSign"])
             _writeWorksheet(table, ws)
-
-
-    
 
     wb.save(options["fileName"])
 

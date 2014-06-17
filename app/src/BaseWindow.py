@@ -7,14 +7,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "gui"))
 # QT
 from PyQt4 import QtCore, QtGui
 
-# EXPORT DIALOT
+# DIALOGS
 from ExportDialog import ExportDialog
+from ProgressDialog import ProgressDialog
 
 # HELPERS AND SETTINGS
 from helpers import Settings
 import helpers as f
 
-# EXPORT UI
+# BASE UI
 import base
 
 
@@ -148,6 +149,8 @@ class BaseWindow(QtGui.QDialog):
         self.ui.lcdNumber.display(0)
         self.ui.exportButton.setEnabled(False)
 
+        self.ui.database.setText("Actual Database: " + metaData["_name"])
+
 
     def _tableItemChanged(self, tableItem):
         table   = tableItem.tableWidget()
@@ -207,7 +210,7 @@ class BaseWindow(QtGui.QDialog):
         row = self.ui.databaseTable.currentRow()
 
         if row == -1:                                                     #---check for no selection
-            f.warn("WARNING - No Database seleced...only an update of List is executed")
+            f.warn("WARNING - No Database selected")
         else:
             fileName = str(self.ui.databaseTable.item(row, 0).text())  #---get name of selected item---
             self._downloadDB(fileName)
@@ -232,39 +235,31 @@ class BaseWindow(QtGui.QDialog):
         self._downloadDB(fileName)
 
 
+    def _downloadDB(self, name):
+        self.worker = f.DownloadAndExtractDbWorker(name, parent = self)
+        self.worker.startWork()
 
-    def _downloadDB(self, fileName):
-        try:
-            f.downloadTsvFile(fileName)
-        except f.Error as e:
-            return False
+        self.worker.finishedTrigger.connect(lambda: f.addFileInfo(name))
+        self.worker.finishedTrigger.connect(self.updateDBList)
 
-        f.addFileInfo(fileName) 
-
-        self.updateDBList()
-        return True;
 
     def _loadDB(self):   
-        # loading the selected  database
-        # return False if no Database was selected
+        row = self.ui.databaseTable.currentRow()
 
-        #---get selected database---
-        row = self.ui.databaseTable.currentRow()                              #---get selected row
-
-        if row == -1:                                                          #---check for invalid selection
+        if row == -1:
             f.warn("WARNING - No Database seleced...")
             return False
 
-        name = str(self.ui.databaseTable.item(row, 0).text())         #---read selected name---
+        name = str(self.ui.databaseTable.item(row, 0).text())
         f.log("Attempt to load selected database: " + name)
 
-        self.ui.label_2.setText("Actual Database: " + name)               #---update info-label above TAble
+        
+        self.worker = f.LoadDbWorker(name, baseDialog = self, parent = self)
+        self.worker.startWork()
 
-        #---load TSV Information to class arrays---
-        metaData = f.loadTsvFile(name)
 
-        #---update Tabs = Filling tabs with info from class arrays ---
-        self.updateTab(metaData)
+        self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
+        
 
 
     def _addLineEditChanged(self, text):
@@ -288,6 +283,7 @@ class BaseWindow(QtGui.QDialog):
         dialog = ExportDialog(self)
         dialog.init(self.metaData, selection)
         dialog.show()
+
 
     def _runPreset(self):
         fileName = QtGui.QFileDialog.getOpenFileName(self, "Run Preset", Settings.presetPath, "Presets (*.preset)")
