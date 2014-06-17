@@ -18,9 +18,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="baseLayout">
      <item>
-      <widget class="QGroupBox" name="groupBox_2">
+      <widget class="QGroupBox" name="databasesGroupBox">
        <property name="maximumSize">
         <size>
          <width>260</width>
@@ -87,7 +87,7 @@
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <layout class="QHBoxLayout" name="leftLayout">
           <item>
            <widget class="QPushButton" name="updateButton">
             <property name="text">
@@ -112,7 +112,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <layout class="QHBoxLayout" name="addLayout">
           <item>
            <widget class="QLineEdit" name="addLineEdit">
             <property name="autoFillBackground">
@@ -136,14 +136,14 @@
       </widget>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <layout class="QVBoxLayout" name="middleLayout">
        <property name="sizeConstraint">
         <enum>QLayout::SetMaximumSize</enum>
        </property>
        <item>
         <widget class="QLabel" name="database">
          <property name="text">
-          <string>&quot;Databasename&quot; - Data Selection</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -161,7 +161,7 @@
           </attribute>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
+            <widget class="QLabel" name="noDataLabel">
              <property name="text">
               <string>No data loaded</string>
              </property>
@@ -177,9 +177,9 @@
       </layout>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <layout class="QVBoxLayout" name="rightLayout">
        <item>
-        <widget class="QLabel" name="label_7">
+        <widget class="QLabel" name="selectedLabel">
          <property name="text">
           <string>Datasets selected</string>
          </property>
@@ -222,13 +222,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="optionsButton">
-         <property name="text">
-          <string>Options</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -240,22 +233,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>..OK</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
        </item>
        <item>
         <widget class="QDialogButtonBox" name="buttonBox">
@@ -306,7 +283,6 @@
   <tabstop>tabWidget</tabstop>
   <tabstop>presetButton</tabstop>
   <tabstop>exportButton</tabstop>
-  <tabstop>optionsButton</tabstop>
   <tabstop>buttonBox</tabstop>
   <tabstop>databaseTable</tabstop>
  </tabstops>
