@@ -9,6 +9,8 @@ from PyQt4 import QtCore, QtGui
 
 # HELPERS AND SETTINGS
 from helpers import Settings
+import exportFunctions as e
+
 import helpers as f
 
 # EXPORT UI
@@ -50,6 +52,8 @@ class ExportDialog(QtGui.QDialog):
 
         self.ui.fileEdit.setText(Settings.exportFile.replace("##NAME##", self.metaData["_name"]))
 
+        self.ui.tabName.setText(metaData["_name"])
+
 
     def _comboChanged(self, text):
         sender = self.sender()
@@ -61,6 +65,11 @@ class ExportDialog(QtGui.QDialog):
             while combo.currentText() in selectedEntries: 
                 combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[comboType]["values"]))
             selectedEntries.append(combo.currentText())
+
+        if self.combos["tab"]["combo"].currentText() == "None":
+            self.ui.tabName.setEnabled(True)
+        else:
+            self.ui.tabName.setEnabled(False)
 
 
     def _fileSelect(self):
@@ -113,15 +122,21 @@ class ExportDialog(QtGui.QDialog):
                     "fileType":     "EXCEL",
                     "fileName":     str(self.ui.fileEdit.text()),
                     "sorting":      sorting,
+                    "locales":      str(self.ui.localeComboBox.currentText()),
+                    "overwrite":    str(self.ui.overwriteComboBox.currentText()),
+                    "style":        str(self.ui.styleComboBox.currentText()),
+                    "presetTime":   str(self.ui.timeComboBox.currentText()),
                     "emptyCellSign": str(self.ui.emptyEntryEdit.text())}
+
+        if len(structure["tab"]) == 0:
+            options["tabName"] = self.ui.tabName.text()
 
         return options
 
 
     def _doExport(self):
-        #p = QtGui.QProgressDialog("Exporting...", "Abort", 0, 10, self);
-        #p.open()
-        #p.setValue(4)
-        f.export(self._getOptions())
-        #p.close()
-        #self.close()
+        self.worker = e.ExportWorker(self._getOptions(), parent = self)
+        self.worker.startWork()
+        self.worker.finishedTrigger.connect(self.close)
+
+        

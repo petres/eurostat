@@ -32,7 +32,6 @@ class ProgressDialog(QtGui.QDialog):
     def init(self, title, steps = []):
         self.setWindowTitle(title)
         for i, step in enumerate(steps):
-            print step
             number = QtGui.QLabel(self)
             number.setText(str(i+1) + ".")
             number.setFont(self.inactiveFont)
@@ -44,15 +43,17 @@ class ProgressDialog(QtGui.QDialog):
             self.ui.formLayout.setWidget(i + 3, QtGui.QFormLayout.LabelRole, number)
             self.ui.formLayout.setWidget(i + 3, QtGui.QFormLayout.FieldRole, text)
 
-            self.steps.append({"number": number, "text": text})
+            self.steps.append({"number": number, "text": text, "stepText": step})
 
 
-    def setStep(self, stepNumber):
+    def setStep(self, stepNumber, info):
         #print("set step", step)
         for i, step in enumerate(self.steps):
             font = self.inactiveFont
             if i == stepNumber:
                 font = self.activeFont
+                if len(info) > 0:
+                    step['text'].setText(step['text'] + " " + info)
 
             step["number"].setFont(font)
             step["text"].setFont(font)
