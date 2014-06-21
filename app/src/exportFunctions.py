@@ -43,7 +43,6 @@ class ExportWorker(Worker):
 #----------------------------------------------
 
 def export(options, progressControl = None):
-
     structure = options["structure"]
     selection = options["selection"]
 
@@ -63,7 +62,7 @@ def export(options, progressControl = None):
         progressControl.setStep(2)
 
     if len(structure["tab"]) == 0:
-        ws = wb.add_sheet("Data")
+        ws = wb.add_sheet(options["tabName"])
 
         ws.write(1, 0, "Name:")
         ws.write(1, 1, options["name"], xlwt.easyxf("font: bold on; "))
@@ -71,7 +70,7 @@ def export(options, progressControl = None):
         ws.write(2, 0, "Preset:")
         ws.write(2, 1, f.getStringOfPreset(options))
 
-        table = _prepareTable(data, structure, selection, emptyCellSign = options["emptyCellSign"])
+        table = _prepareTable(data, options)
         _writeWorksheet(table, ws)
     else:
         tab = []
@@ -88,7 +87,7 @@ def export(options, progressControl = None):
             fixed = {}
             for i, j in enumerate(structure["tab"]):
                 fixed[j] = t[i]
-            table = _prepareTable(data, structure, selection, fixed = fixed, emptyCellSign = options["emptyCellSign"])
+            table = _prepareTable(data, options, fixed = fixed)
             _writeWorksheet(table, ws, initialOffset = (5, 0))
 
 
@@ -96,8 +95,6 @@ def export(options, progressControl = None):
         progressControl.setStep(3)
 
     wb.save(options["fileName"])
-
-
 
 
 def _sortingBeforeExport(selection, sorting = {}):
@@ -166,7 +163,11 @@ def _writeWorksheet(table, ws, initialOffset = (5, 0)):
             ws.write(offset[0] + i, offset[1] + j, entry, copy.deepcopy(style))
 
 
-def _prepareTable(data, structure, selection, fixed = {}, emptyCellSign = Settings.exportEmptyCellSign):
+def _prepareTable(data, options, fixed = {}):
+    structure = options["structure"]
+    selection = options["selection"]
+    emptyCellSign = options["emptyCellSign"]
+
     cols = []
     for i in structure["col"]:
         cols.append(selection[i])

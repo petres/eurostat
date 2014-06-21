@@ -30,8 +30,6 @@ class BaseWindow(QtGui.QDialog):
         self.metaData = None
         self.tables = None
 
-        self.ListFontSize=8
-
         # update db list
         self.updateDBList() 
 
@@ -42,7 +40,7 @@ class BaseWindow(QtGui.QDialog):
         self.connect(self.ui.updateButton, QtCore.SIGNAL("clicked()"), self._updateDBfile)
         self.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self._removeDBfile)
 
-        self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._runPreset)
+        self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._loadPreset)
 
         self.connect(self.ui.addLineEdit, QtCore.SIGNAL("textChanged(const QString &)"), self._addLineEditChanged)
 
@@ -151,6 +149,8 @@ class BaseWindow(QtGui.QDialog):
 
         self.ui.database.setText("Actual Database: " + metaData["_name"])
 
+        self.options = Settings.defaultOptions
+
 
     def _tableItemChanged(self, tableItem):
         table   = tableItem.tableWidget()
@@ -215,8 +215,6 @@ class BaseWindow(QtGui.QDialog):
             fileName = str(self.ui.databaseTable.item(row, 0).text())  #---get name of selected item---
             self._downloadDB(fileName)
 
-        
-
 
     def _addDB(self):    
         # download new database and update lst
@@ -257,10 +255,8 @@ class BaseWindow(QtGui.QDialog):
         self.worker = f.LoadDbWorker(name, baseDialog = self, parent = self)
         self.worker.startWork()
 
-
         self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
         
-
 
     def _addLineEditChanged(self, text):
         if len(text) > 0:
@@ -277,22 +273,29 @@ class BaseWindow(QtGui.QDialog):
             return
 
         #---write box selection in CLass Array ---
-        selection = self.getSelectedCats()
+        self.options["selection"] = self.getSelectedCats()
 
         #---show export option dialog---
         dialog = ExportDialog(self)
-        dialog.init(self.metaData, selection)
+        dialog.init(self.metaData, self.options)
         dialog.show()
 
 
-    def _runPreset(self):
+    def _loadPreset(self):
         fileName = QtGui.QFileDialog.getOpenFileName(self, "Run Preset", Settings.presetPath, "Presets (*.preset)")
 
         if fileName == "":
             f.warn("No file selected.")
             return
 
-        f.runPreset(fileName)
+        options = f.getPresetFromFile(fileName)
+
+        self.worker = f.LoadDbWorker(options["name"], baseDialog = self, parent = self)
+        self.worker.startWork()
+
+        self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
+        self.worker.finishedTrigger.connect(lambda: self.setSelectedCats(options))
+        #f.runPreset(fileName)
 
 
     def getSelectedCats(self):
@@ -305,9 +308,11 @@ class BaseWindow(QtGui.QDialog):
         return selection
 
 
-    def setSelectedCats(self, selection):
+    def setSelectedCats(self, options):
+        selection = options["selection"]
         for code, tableWidget in self.tables.items():
             if code in selection:
                 for i in range(1, tableWidget.rowCount()):
                     if tableWidget.item(i, 1).text() in selection[code]:
                         tableWidget.item(i, 0).setCheckState(QtCore.Qt.Checked)
+        self.options = options

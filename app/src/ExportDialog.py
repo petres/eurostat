@@ -23,18 +23,39 @@ class ExportDialog(QtGui.QDialog):
         self.ui = export.Ui_exportDialog()
         self.ui.setupUi(self)
 
-        self.ui.emptyEntryEdit.setText(Settings.exportEmptyCellSign)
-
         self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
         self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._doExport)
         self.connect(self.ui.fileButton, QtCore.SIGNAL("clicked()"), self._fileSelect)
         self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._saveAsPreset)
 
 
-    def init(self, metaData, selection):
-        self.metaData   = metaData
-        self.selection  = selection
 
+
+    def init(self, metaData, options):
+        self.metaData   = metaData
+        self.options  = options
+
+        ### UPDATE GUI
+
+        # EMPTY CELL SIGN
+        self.ui.emptyEntryEdit.setText(options["emptyCellSign"])
+
+        # TIME SORTING
+        if options["sorting"]["time"] == QtCore.Qt.DescendingOrder:
+            self.ui.timeSortingCombo.setCurrentIndex(self.ui.timeSortingCombo.findText("descending"))
+        elif options["sorting"]["time"] == QtCore.Qt.AscendingOrder:
+            self.ui.timeSortingCombo.setCurrentIndex(self.ui.timeSortingCombo.findText("ascending"))
+
+        # OVERWRITE
+        self.ui.overwriteComboBox.setCurrentIndex(self.ui.overwriteComboBox.findText(options["overwrite"]))
+        # STYLE
+        self.ui.styleComboBox.setCurrentIndex(self.ui.styleComboBox.findText(options["style"]))
+        # PRESET TIME
+        self.ui.timeComboBox.setCurrentIndex(self.ui.timeComboBox.findText(options["presetTime"]))
+        # LOCALES
+        self.ui.localeComboBox.setCurrentIndex(self.ui.localeComboBox.findText(options["locales"]))
+
+        # STRUCTURE
         self.combos = { "tab": { "combo": self.ui.tabCombo, "values": ["None"] + metaData["_cols"]}, 
                         "row": { "combo": self.ui.rowCombo, "values": metaData["_cols"]}, 
                         "col": { "combo": self.ui.colCombo, "values": metaData["_cols"]}}
@@ -43,16 +64,23 @@ class ExportDialog(QtGui.QDialog):
             combo = self.combos[comboType]["combo"]
             combo.addItems(self.combos[comboType]["values"])
             self.connect(combo, QtCore.SIGNAL("currentIndexChanged(QString)"), self._comboChanged)
-            
-        for comboType in self.combos:
-            combo = self.combos[comboType]["combo"]
         
         self.ui.colCombo.setCurrentIndex(1)
         self.ui.colCombo.setCurrentIndex(0)
 
-        self.ui.fileEdit.setText(Settings.exportFile.replace("##NAME##", self.metaData["_name"]))
+        for comboType in options["structure"]:
+            combo = self.combos[comboType]["combo"]
+            if len(options["structure"][comboType]) == 0:
+                combo.setCurrentIndex(combo.findText("None"))
+            elif len(options["structure"][comboType]) > 0:
+                combo.setCurrentIndex(combo.findText(options["structure"][comboType][0]))
 
-        self.ui.tabName.setText(metaData["_name"])
+
+        # FILE NAME
+        self.ui.fileEdit.setText(options["fileName"].replace("##NAME##", self.metaData["_name"]))
+        # TAB NAME
+        if "tabName" in options:
+            self.ui.tabName.setText(options["tabName"].replace("##NAME##", self.metaData["_name"]))
 
 
     def _comboChanged(self, text):
@@ -86,10 +114,10 @@ class ExportDialog(QtGui.QDialog):
         if fileName == "":
             return
 
-        f.savePreset(fileName, self._getOptions())
+        f.savePreset(fileName, self._updateAndReturnOptions())
 
 
-    def _getOptions(self):
+    def _updateAndReturnOptions(self):
         structure = {}
         sorting = {}
 
@@ -114,28 +142,33 @@ class ExportDialog(QtGui.QDialog):
                 structure[comboType] = [str(text)]
                 allCols.remove(text)          
 
+        # all not used columns add to row structure
         structure["row"].extend(allCols)
 
-        options = { "name":         self.metaData["_name"],
-                    "selection":    self.selection,
-                    "structure":    structure,
-                    "fileType":     "EXCEL",
-                    "fileName":     str(self.ui.fileEdit.text()),
-                    "sorting":      sorting,
-                    "locales":      str(self.ui.localeComboBox.currentText()),
-                    "overwrite":    str(self.ui.overwriteComboBox.currentText()),
-                    "style":        str(self.ui.styleComboBox.currentText()),
-                    "presetTime":   str(self.ui.timeComboBox.currentText()),
-                    "emptyCellSign": str(self.ui.emptyEntryEdit.text())}
+        self.options = {"name":         self.metaData["_name"],
+                        "selection":    self.options["selection"],
+                        "structure":    structure,
+                        "fileType":     "EXCEL",
+                        "fileName":     str(self.ui.fileEdit.text()),
+                        "sorting":      sorting,
+                        "locales":      str(self.ui.localeComboBox.currentText()),
+                        "overwrite":    str(self.ui.overwriteComboBox.currentText()),
+                        "style":        str(self.ui.styleComboBox.currentText()),
+                        "presetTime":   str(self.ui.timeComboBox.currentText()),
+                        "emptyCellSign": str(self.ui.emptyEntryEdit.text())}
+
 
         if len(structure["tab"]) == 0:
-            options["tabName"] = self.ui.tabName.text()
+            tabName = self.ui.tabName.text();
+            if len(tabName) == 0:
+                tabName = self.metaData["_name"]
+            self.options["tabName"] = tabName
 
-        return options
+        return self.options
 
 
     def _doExport(self):
-        self.worker = e.ExportWorker(self._getOptions(), parent = self)
+        self.worker = e.ExportWorker(self._updateAndReturnOptions(), parent = self)
         self.worker.startWork()
         self.worker.finishedTrigger.connect(self.close)
 

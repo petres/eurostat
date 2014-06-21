@@ -33,16 +33,18 @@ def main():
     window = BaseWindow()
     window.show()
 
-    metaData = f.loadTsvFile('nama_nace06_p')
-    window.updateTab(metaData)
-    window.setSelectedCats( {
-    	"time": 		["2012", "2011", "2008"],
-    	"unit":			["CPI00_EUR", "CPI05_NAC"],
-    	"nace_r1":		["D", "F", "TOTAL"],
-    	"indic_na":		["B1G"],
-    	"geo":			["AT", "DE", "ES"]
-    	})
-    window._initExport()
+    # metaData = f.loadTsvFile('nama_nace06_p')
+    # window.updateTab(metaData)
+    # options = Settings.defaultOptions
+    # options["selection"] = {
+    #                   "time":     ["2012", "2011", "2008"],
+    #                   "unit":     ["CPI00_EUR", "CPI05_NAC"],
+    #                   "nace_r1":    ["D", "F", "TOTAL"],
+    #                   "indic_na":   ["B1G"],
+    #                   "geo":      ["AT", "DE", "ES"]
+    #                   }
+    # window.setSelectedCats(options)
+    # window._initExport()
     
     print(sys.exit(app.exec_()))
 

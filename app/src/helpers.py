@@ -47,13 +47,25 @@ class Settings():
     eurostatURL         = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&dir=data'
     eurostatURLchar     = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?dir=data&sort=1&sort=2&start=' #+'n' is the list of files start with "n"
 
-    exportEmptyCellSign = ""
     eurostatEmptyCellSign = ":"
 
     exportFile          = os.path.join('output', '##NAME##.xls')
     presetFile          = os.path.join('presets', '##NAME##.preset')
 
     inGui               = False
+
+    defaultOptions      = { #"name":            self.metaData["_name"],
+                            #"selection":       self.options["selection"],
+                            "structure":        { "tab": [], "col": ["time"]},
+                            "tabName":          "##NAME##",
+                            "fileType":         "EXCEL",
+                            "fileName":         "##NAME##.xlsx",
+                            "sorting":          { "time": QtCore.Qt.DescendingOrder },
+                            "locales":          "EN",
+                            "overwrite":        "Sheet",
+                            "style":            "Basic",
+                            "presetTime":       "Include Newer Periods",
+                            "emptyCellSign":    ""}
 
 #----------------------------------------------
 
