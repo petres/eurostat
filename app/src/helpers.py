@@ -31,16 +31,21 @@ except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import urlopen
 
-import time
+
+from datetime import datetime
 
 #----------------------------------------------
 #----- SETTINGS -------------------------------
 #----------------------------------------------
 
 class Settings():
-    dataPath            = "data/"
-    dictPath            = "data/dict/"
-    presetPath          = "presets/"
+    dataPath            = "data"
+    dictPath            = os.path.join('data', 'dict')
+    presetPath          = "presets"
+
+    dataInfoFile        = os.path.join('data', 'info.json')
+
+    applicationName     = "Eurostat Exporter"
 
     dictURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
     bulkURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
@@ -49,7 +54,6 @@ class Settings():
 
     eurostatEmptyCellSign = ":"
 
-    exportFile          = os.path.join('output', '##NAME##.xls')
     presetFile          = os.path.join('presets', '##NAME##.preset')
 
     inGui               = False
@@ -59,7 +63,7 @@ class Settings():
                             "structure":        { "tab": [], "col": ["time"]},
                             "tabName":          "##NAME##",
                             "fileType":         "EXCEL",
-                            "fileName":         "##NAME##.xlsx",
+                            "fileName":         os.path.join('output', '##NAME##.xlsx'),
                             "sorting":          { "time": QtCore.Qt.DescendingOrder },
                             "locales":          "EN",
                             "overwrite":        "Sheet",
@@ -67,6 +71,7 @@ class Settings():
                             "presetTime":       "Include Newer Periods",
                             "emptyCellSign":    ""}
 
+    dateFormat          = '%d/%m/%Y %H:%M:%S'
 #----------------------------------------------
 
 
@@ -139,9 +144,9 @@ class Worker(QtCore.QThread):
         except Error as e:
             self.error = e
             self.stepTrigger.emit(-1,"")
-        except Exception as e:
-            self.error = Error(str(e))
-            self.stepTrigger.emit(-1,"")
+        #except Exception as e:
+        #    self.error = Error(str(e))
+        #    self.stepTrigger.emit(-1,"")
 
         self.setStep(len(self.steps))
 
@@ -175,7 +180,7 @@ class Worker(QtCore.QThread):
 
 class DownloadAndExtractDbWorker(Worker):
     title = "Get Database ... "
-    steps = ["Download File", "Extracting"]
+    steps = ["Download File", "Extracting", "Get File Info"]
 
     def __init__(self, name, parent = None): 
         Worker.__init__(self, parent)
@@ -184,9 +189,12 @@ class DownloadAndExtractDbWorker(Worker):
 
     def work(self):
         self.setStep(0)
+        currentTime = datetime.now()
         downloadTsvGzFile(self.name)
         self.setStep(1)
         extractTsvGzFile(self.name)
+        self.setStep(2)
+        addFileInfo(self.name, currentTime)
 
 
 class LoadDbWorker(Worker):
@@ -275,7 +283,7 @@ def removeTsvFile(name):
     log("removing file " + Settings.dataPath + fileName)
 
     #---removing file---
-    os.remove(Settings.dataPath + fileName)
+    os.remove(os.path.join(Settings.dataPath, fileName))
 
 
 def loadTsvFile(name):
@@ -349,64 +357,69 @@ def loadTsvFile(name):
 #----- FILE INFO FUNCTIONS --------------------
 #----------------------------------------------
 
-def getFileInfo(fname):
-    # for filename "aact_ali02 this function returns: "6.5 KB;07/04/2014"
-    # by looking in the _INFO-file.
+def getFileInfoJson():
+    if not os.path.isfile(Settings.dataInfoFile):
+        saveFileInfoJson()
 
-    if fname[-4:] == ".tsv":   #file.tsv -> file  (if necessary)
-        fname = fname[:-4]
+    with open(Settings.dataInfoFile, 'r') as infoFile:
+        info = sj.loads(infoFile.read())
 
-    infoFile = os.path.join(Settings.dataPath, "_INFO.txt")
+    for entry in info:
+        if "updatedDate" in info[entry]:
+            info[entry]["updatedDate"] = datetime.strptime(info[entry]["updatedDate"], Settings.dateFormat)
+        if "extractedDate" in info[entry]:
+            info[entry]["extractedDate"] = datetime.strptime(info[entry]["extractedDate"], Settings.dateFormat)
 
-    if not os.path.isfile(infoFile):
-        open(infoFile, 'a').close()
+    return info
 
-    lines = open(Settings.dataPath + "_INFO.txt").readlines()
-    for ln in lines:
-        if fname in ln:
-            return ln
+def saveFileInfoJson(info = {}):
+    for entry in info:
+        if "updatedDate" in info[entry]:
+            info[entry]["updatedDate"] = info[entry]["updatedDate"].strftime(Settings.dateFormat)
+        if "extractedDate" in info[entry]:
+            info[entry]["extractedDate"] = info[entry]["extractedDate"].strftime(Settings.dateFormat)
 
-    return "n.a.;n.a.;n.a."
+    with open(Settings.dataInfoFile, 'w') as infoFile:
+        infoFile.write(sj.dumps(info))
+        infoFile.close()
 
-
-def delFileInfo(fname):
-    #FUNCTION : removes fileinfo (update-date,size) to _info.txt
-    if fname[-4:] == ".tsv":   #file.tsv -> file  (if necessary)
-        fname = fname[:-4]
-
-    todelete = Settings.getFileInfo(fname) #as "aact_ali02;6.5 KB;07/04/2014"
-
-    infoFile = os.path.join(Settings.dataPath, "_INFO.txt")
-
-    lines = open(infoFile).readlines()
-    lines.remove(todelete)
-    open(infoFile, 'w').writelines(lines)
+def getFileInfo(name):
+    info = getFileInfoJson()
+    if name in info:
+        return info[name]
 
 
-def addFileInfo(fname):
-    #FUNCTION : reads fileinformation (last update, filesize) from the eurostat webpage
-    #           and stores info in _INFO.txt
+def delFileInfo(name):
+    info = getFileInfoJson()
 
-    #---read html data and search filename---
-    fileURL = Settings.eurostatURLchar + fname[0]  # the url is sorted e.g. it ends with "a" for a List of files that start with "a"
+    if name in info:
+        del info[name]
+
+    saveFileInfoJson(info)
+
+def getFileInfoFromEurostat(name):
+    fileURL = Settings.eurostatURLchar + name[0]  # the url is sorted e.g. it ends with "a" for a List of files that start with "a"
     response = urlopen(fileURL)
 
-    info = None;
-
     for line in response:
-        if fname in line:
-            info = line
+        if name in line:
             break
 
-    # ---extract size and date from html text
-    fsize = info.split("</td>")[1].split(">")[1]
-    fdate = info.split("</td>")[3].split("&nbsp;")[1][:10]
-    finfo = fname + ";" + fdate + ";" + fsize  # = "aact_ali02;6.5 KB;07/04/2014"
+    info = {}
+    info["size"] = line.split("</td>")[1].split(">")[1]
+    dateString = line.split("</td>")[3].split("&nbsp;")[1]
+    info["date"] = datetime.strptime(dateString, Settings.dateFormat)
 
-    infoFile = os.path.join(Settings.dataPath, "_INFO.txt")
-    #---write in file
-    with open(infoFile, "a") as f:
-        f.write(finfo + "\n")
+    return info
+
+
+def addFileInfo(name, extractedDate):
+    eurostatInfo = getFileInfoFromEurostat(name)
+
+    info = getFileInfoJson()
+    info[name] = {"size": eurostatInfo["size"], "updatedDate": eurostatInfo["date"], "extractedDate": extractedDate}
+
+    saveFileInfoJson(info)
 
 
 def getFileList():
@@ -435,7 +448,7 @@ def findInDict(title, shorty):
     longy = ""
 
     try:
-        dictFileName = Settings.dictPath + title + ".dic"             #open dict that is equal to the TAbtitle
+        dictFileName = os.path.join(Settings.dictPath, title + ".dic" )            #open dict that is equal to the TAbtitle
 
         with open(dictFileName, "r") as dictFile:
             dictReader = csv.reader(dictFile, delimiter = "\t")

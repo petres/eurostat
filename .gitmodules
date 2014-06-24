@@ -1,9 +1,6 @@
 [submodule "app/lib/_source/simplejson"]
 	path = app/lib/simplejson
 	url = https://github.com/simplejson/simplejson.git
-[submodule "app/lib/_source/xlwt"]
-	path = app/lib/xlwt
-	url = https://github.com/python-excel/xlwt
 [submodule "app/lib/_source/sdmx"]
 	path = app/lib/sdmx
 	url = https://github.com/mwilliamson/sdmx.py

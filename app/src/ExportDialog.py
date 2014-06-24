@@ -159,7 +159,7 @@ class ExportDialog(QtGui.QDialog):
 
 
         if len(structure["tab"]) == 0:
-            tabName = self.ui.tabName.text();
+            tabName = str(self.ui.tabName.text());
             if len(tabName) == 0:
                 tabName = self.metaData["_name"]
             self.options["tabName"] = tabName
@@ -168,7 +168,9 @@ class ExportDialog(QtGui.QDialog):
 
 
     def _doExport(self):
-        self.worker = e.ExportWorker(self._updateAndReturnOptions(), parent = self)
+        self.main.options = self._updateAndReturnOptions()
+        self.worker = e.ExportWorker(self.main.options, parent = self)
+
         self.worker.startWork()
         self.worker.finishedTrigger.connect(self.close)
 

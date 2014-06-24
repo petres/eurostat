@@ -18,7 +18,6 @@ import helpers as f
 # BASE UI
 import base
 
-
 class BaseWindow(QtGui.QDialog):
     def __init__(self, parent=None):
         super(QtGui.QDialog, self).__init__(parent)
@@ -57,11 +56,17 @@ class BaseWindow(QtGui.QDialog):
         #---addjust List ----
         self.ui.databaseTable.setRowCount(len(tsvNames))
 
-        for i, fname in enumerate(tsvNames):
-            self.ui.databaseTable.setItem(i, 0, QtGui.QTableWidgetItem(fname))
-            fileinfo = f.getFileInfo(fname).split(";")
-            self.ui.databaseTable.setItem(i, 1, QtGui.QTableWidgetItem(fileinfo[1].strip(' \t\n\r')))
-            self.ui.databaseTable.setItem(i, 2, QtGui.QTableWidgetItem(fileinfo[2].strip(' \t\n\r')))
+        for i, name in enumerate(tsvNames):
+            self.ui.databaseTable.setItem(i, 0, QtGui.QTableWidgetItem(name))
+            info = f.getFileInfo(name)
+            self.ui.databaseTable.setItem(i, 1, QtGui.QTableWidgetItem(str(info["updatedDate"])))
+            self.ui.databaseTable.setItem(i, 2, QtGui.QTableWidgetItem(info["size"]))
+
+            newInfo = f.getFileInfoFromEurostat(name)
+            if newInfo["date"] > info["updatedDate"]:
+                for j in range(3):
+                    self.ui.databaseTable.item(i, j).setForeground(QtGui.QColor.fromRgb(255,0,0))
+            #myItem->setForeground(QColor::fromRgb(255,0,0));
 
         #adjust size
         #font= QtGui.QFont()
@@ -233,11 +238,10 @@ class BaseWindow(QtGui.QDialog):
         self._downloadDB(fileName)
 
 
-    def _downloadDB(self, name):
+    def _downloadDB(self, name):        
         self.worker = f.DownloadAndExtractDbWorker(name, parent = self)
         self.worker.startWork()
 
-        self.worker.finishedTrigger.connect(lambda: f.addFileInfo(name))
         self.worker.finishedTrigger.connect(self.updateDBList)
 
 

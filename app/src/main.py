@@ -30,6 +30,7 @@ def main():
         f.runPresetsFromCL(args.presets)
         exit()
     app = QtGui.QApplication(sys.argv)
+    app.setApplicationName(Settings.applicationName)
     window = BaseWindow()
     window.show()
 

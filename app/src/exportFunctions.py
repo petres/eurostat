@@ -2,10 +2,12 @@
 import os, sys
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "xlwt"))
+#sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "xlwt"))
+
+from openpyxlWriter import Writer
 
 # EXCEL WRITE
-import xlwt
+#import xlwt
 
 # CSV (reading csv/tsv files)
 import csv
@@ -16,10 +18,6 @@ from PyQt4 import QtCore, QtGui
 # ITERTOOLS FOR PERMUTATIONS
 import itertools
 
-import copy
-
-
-from operator import add
 
 from helpers import Settings, Worker
 import helpers as f
@@ -35,7 +33,6 @@ class ExportWorker(Worker):
 
     def work(self):
         export(self.options, progressControl = self)
-        self.setStep(len(ExportWorker.steps))
 
 
 #----------------------------------------------
@@ -46,10 +43,14 @@ def export(options, progressControl = None):
     structure = options["structure"]
     selection = options["selection"]
 
-    wb = xlwt.Workbook()
+    existingSheets = []
+
+
+    writer = Writer(options)
 
     if progressControl is not None:
         progressControl.setStep(0)
+
     data = _prepareData(options["name"], selection)
 
     # sorting
@@ -62,16 +63,15 @@ def export(options, progressControl = None):
         progressControl.setStep(2)
 
     if len(structure["tab"]) == 0:
-        ws = wb.add_sheet(options["tabName"])
+        writer.changeActiveSheet(options["tabName"])
+        writer.write((1, 0), "Name:")
+        writer.write((1, 1), options["name"])
 
-        ws.write(1, 0, "Name:")
-        ws.write(1, 1, options["name"], xlwt.easyxf("font: bold on; "))
-
-        ws.write(2, 0, "Preset:")
-        ws.write(2, 1, f.getStringOfPreset(options))
+        writer.write((1, 0), "Preset:")
+        writer.write((1, 1), f.getStringOfPreset(options))
 
         table = _prepareTable(data, options)
-        _writeWorksheet(table, ws)
+        writer.writeTable(table)
     else:
         tab = []
         for i in structure["tab"]:
@@ -83,18 +83,21 @@ def export(options, progressControl = None):
             tabName = ""
             for i in t:
                 tabName += str(i)
-            ws = wb.add_sheet(tabName)
+
             fixed = {}
             for i, j in enumerate(structure["tab"]):
                 fixed[j] = t[i]
+
             table = _prepareTable(data, options, fixed = fixed)
-            _writeWorksheet(table, ws, initialOffset = (5, 0))
+            
+            writer.changeActiveSheet(tabName)
+            writer.writeTable(table)
 
 
     if progressControl is not None:
         progressControl.setStep(3)
 
-    wb.save(options["fileName"])
+    writer.save()
 
 
 def _sortingBeforeExport(selection, sorting = {}):
@@ -104,63 +107,6 @@ def _sortingBeforeExport(selection, sorting = {}):
         elif sorting[entry] == QtCore.Qt.AscendingOrder:
             selection[entry] = sorted(selection[entry])
 
-
-def _writeWorksheet(table, ws, initialOffset = (5, 0)):
-    styleString = "font: bold on; pattern: pattern_fore_colour ice_blue, pattern solid; "
-    style = xlwt.easyxf(styleString)
-
-    # Row Labels Labelszzw
-    for i, label in enumerate(table["rowLabelsStructure"]):
-        borders = xlwt.Borders()
-        borders.top = xlwt.Borders.MEDIUM
-        borders.bottom = xlwt.Borders.THIN
-        borders.left = xlwt.Borders.NO_LINE
-        if i == 0:
-            borders.left = xlwt.Borders.MEDIUM
-        if i == len(table["rowLabelsStructure"]) - 1:
-            borders.right = xlwt.Borders.THIN
-        style.borders = borders
-        ws.write(initialOffset[0], initialOffset[1] + i, label, style)
-
-    labelOffset = (len(table["colLabelsStructure"]), len(table["rowLabelsStructure"]))
-
-    # Labels
-    for i, labels in enumerate(table["rowLabels"]):
-        borders = xlwt.Borders()
-        if i == len(table["rowLabels"]) - 1:
-            borders.bottom = xlwt.Borders.MEDIUM
-        for j, label in enumerate(labels):
-            borders.left = xlwt.Borders.NO_LINE
-            if j == 0:
-                borders.left = xlwt.Borders.MEDIUM
-            elif j == len(labels) - 1:
-                borders.right = xlwt.Borders.THIN
-            style.borders = borders
-            ws.write(initialOffset[0] + i + labelOffset[0], initialOffset[1] + j, label, copy.deepcopy(style))
-
-    for i, label in enumerate(table["colLabels"]):
-        borders = xlwt.Borders()
-        borders.top = xlwt.Borders.MEDIUM
-        borders.bottom = xlwt.Borders.THIN
-        if i == len(table["colLabels"]) - 1:
-            borders.right = xlwt.Borders.MEDIUM
-        style.borders = borders
-        ws.write(initialOffset[0], initialOffset[1] + i + labelOffset[1], label, style)
-
-    offset = map(add, initialOffset, labelOffset)
-
-    style = xlwt.easyxf()
-    # Data
-    for i, line in enumerate(table["data"]):
-        borders = xlwt.Borders()
-        if i == len(table["data"]) - 1:
-            borders.bottom = xlwt.Borders.MEDIUM
-        for j, entry in enumerate(line):
-            if j == len(line) - 1:
-                borders.right = xlwt.Borders.MEDIUM
-            style.borders = borders
-            #rint entry, style.borders.right
-            ws.write(offset[0] + i, offset[1] + j, entry, copy.deepcopy(style))
 
 
 def _prepareTable(data, options, fixed = {}):
