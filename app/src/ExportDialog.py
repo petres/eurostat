@@ -29,8 +29,6 @@ class ExportDialog(QtGui.QDialog):
         self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._saveAsPreset)
 
 
-
-
     def init(self, metaData, options):
         self.metaData   = metaData
         self.options  = options

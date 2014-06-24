@@ -83,5 +83,6 @@ class Writer():
             for j, entry in enumerate(line):
                 self.write((offset[0] + i, offset[1] + j), entry)
 
+
     def save(self):
         self.wb.save(filename = self.fileName)

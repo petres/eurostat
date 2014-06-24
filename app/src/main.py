@@ -31,6 +31,7 @@ def main():
         exit()
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName(Settings.applicationName)
+    
     window = BaseWindow()
     window.show()
 

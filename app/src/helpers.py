@@ -9,10 +9,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "simplejson
 import csv
 # GZIP (uncompress .gz files)
 import gzip
-# EXCEL READ
-#import xlrd
-# EXCEL WRITE
-import xlwt
 # ITERTOOLS FOR PERMUTATIONS
 import itertools
 # SIMPLEJSON
@@ -33,6 +29,9 @@ except ImportError:
 
 
 from datetime import datetime
+
+import copy
+
 
 #----------------------------------------------
 #----- SETTINGS -------------------------------
@@ -357,7 +356,15 @@ def loadTsvFile(name):
 #----- FILE INFO FUNCTIONS --------------------
 #----------------------------------------------
 
+fileInfo = {}
+fileInfoLoaded = False
+
 def getFileInfoJson():
+    global fileInfo
+
+    if fileInfoLoaded:
+        return fileInfo
+
     if not os.path.isfile(Settings.dataInfoFile):
         saveFileInfoJson()
 
@@ -369,19 +376,28 @@ def getFileInfoJson():
             info[entry]["updatedDate"] = datetime.strptime(info[entry]["updatedDate"], Settings.dateFormat)
         if "extractedDate" in info[entry]:
             info[entry]["extractedDate"] = datetime.strptime(info[entry]["extractedDate"], Settings.dateFormat)
+        if "lastCheckedDate" in info[entry]:
+            info[entry]["lastCheckedDate"] = datetime.strptime(info[entry]["lastCheckedDate"], Settings.dateFormat)
 
-    return info
+    fileInfo = info
 
-def saveFileInfoJson(info = {}):
-    for entry in info:
-        if "updatedDate" in info[entry]:
-            info[entry]["updatedDate"] = info[entry]["updatedDate"].strftime(Settings.dateFormat)
-        if "extractedDate" in info[entry]:
-            info[entry]["extractedDate"] = info[entry]["extractedDate"].strftime(Settings.dateFormat)
+    return fileInfo
+
+
+def saveFileInfoJson():
+    wInfo = copy.deepcopy(fileInfo)
+    for entry in wInfo:
+        if "updatedDate" in wInfo[entry]:
+            wInfo[entry]["updatedDate"] = wInfo[entry]["updatedDate"].strftime(Settings.dateFormat)
+        if "extractedDate" in wInfo[entry]:
+            wInfo[entry]["extractedDate"] = wInfo[entry]["extractedDate"].strftime(Settings.dateFormat)
+        if "lastCheckedDate" in wInfo[entry]:
+            wInfo[entry]["lastCheckedDate"] = wInfo[entry]["lastCheckedDate"].strftime(Settings.dateFormat)
 
     with open(Settings.dataInfoFile, 'w') as infoFile:
-        infoFile.write(sj.dumps(info))
+        infoFile.write(sj.dumps(wInfo))
         infoFile.close()
+
 
 def getFileInfo(name):
     info = getFileInfoJson()
@@ -395,31 +411,41 @@ def delFileInfo(name):
     if name in info:
         del info[name]
 
-    saveFileInfoJson(info)
+    saveFileInfoJson()
+
 
 def getFileInfoFromEurostat(name):
+    eInfo = {}
+    eInfo["lastCheckedDate"] = datetime.now()
+
     fileURL = Settings.eurostatURLchar + name[0]  # the url is sorted e.g. it ends with "a" for a List of files that start with "a"
     response = urlopen(fileURL)
 
     for line in response:
         if name in line:
             break
+    
+    eInfo["size"] = line.split("</td>")[1].split(">")[1]
 
-    info = {}
-    info["size"] = line.split("</td>")[1].split(">")[1]
     dateString = line.split("</td>")[3].split("&nbsp;")[1]
-    info["date"] = datetime.strptime(dateString, Settings.dateFormat)
+    eInfo["updatedDate"] = datetime.strptime(dateString, Settings.dateFormat)
 
-    return info
+    info = getFileInfoJson()
+    if name in info:
+        info[name]["lastCheckedDate"] = eInfo["lastCheckedDate"]
+
+    return eInfo
 
 
 def addFileInfo(name, extractedDate):
     eurostatInfo = getFileInfoFromEurostat(name)
 
     info = getFileInfoJson()
-    info[name] = {"size": eurostatInfo["size"], "updatedDate": eurostatInfo["date"], "extractedDate": extractedDate}
+    info[name] = {"size": eurostatInfo["size"], "updatedDate": eurostatInfo["updatedDate"], 
+                "extractedDate": extractedDate, "lastCheckedDate": eurostatInfo["lastCheckedDate"] }
 
-    saveFileInfoJson(info)
+
+    saveFileInfoJson()
 
 
 def getFileList():

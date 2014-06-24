@@ -6,9 +6,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
 
 from openpyxlWriter import Writer
 
-# EXCEL WRITE
-#import xlwt
-
 # CSV (reading csv/tsv files)
 import csv
 
