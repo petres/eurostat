@@ -4,6 +4,8 @@ from openpyxl.cell import get_column_letter
 # ADD FOR ADDING TUPLES
 from operator import add
 
+import helpers as f
+
 class Writer():
     def __init__(self, options):
         self.overwrite = options["overwrite"]
@@ -53,35 +55,63 @@ class Writer():
 
         self.ws = ws
 
+    def writeHeader(self, options):
+        self.write((0, 0), "Name:")
+        self.write((0, 1), options["name"])
+
+        self.write((1, 0), "Preset:")
+        self.write((1, 1), f.getStringOfPreset(options))
 
     def write(self, coords, value, style = None):
-        self.ws.cell('%s%s'%(get_column_letter(coords[0] + 1), coords[1] + 1)).value = str(value)
+        self.ws.cell('%s%s'%(get_column_letter(coords[1] + 1), coords[0] + 1)).value = str(value)
 
 
-    def writeTable(self, table, sheetName = None, initialOffset = (0, 5)):
+    def writeTable(self, table, sheetName = None, initialOffset = (5, 0)):
         if sheetName is not None:
             changeActiveSheet(sheetName)
 
-        # Row Labels Labels
-        for i, label in enumerate(table["rowLabelsStructure"]):
-            self.write((initialOffset[0], initialOffset[1] + i), label)
 
-        labelOffset = (len(table["colLabelsStructure"]), len(table["rowLabelsStructure"]))
+        
+
+        # Row Labels Labels
+        rowLabels = []
+        tableOffsetRow = 0
+        for label in table["structure"]["row"]:
+            if label["count"] > 1:
+                rowLabels.append(label["name"])
+            else:
+                self.write((initialOffset[0] + tableOffsetRow, 0), label["name"])
+                self.write((initialOffset[0] + tableOffsetRow, 1), label["value"])
+                tableOffsetRow += 1
+
+        tableOffset = (tableOffsetRow + 2, 0)
+        offset = map(add, initialOffset, tableOffset)
+
+
+        for i, label in enumerate(rowLabels):
+            self.write((offset[0], offset[1] + i), label)
+                
+
+
+        labelOffset = (1, len(rowLabels))
 
         # Labels
-        for i, labels in enumerate(table["rowLabels"]):
+        for i, labels in enumerate(table["labels"]["row"]):
+            k = 0
             for j, label in enumerate(labels):
-                self.write((initialOffset[0] + i + labelOffset[0], initialOffset[1] + j), label)
+                if table["structure"]["row"][j]["count"] > 1:
+                    self.write((offset[0] + i + labelOffset[0], offset[1] + k), label)
+                    k += 1
 
-        for i, label in enumerate(table["colLabels"]):
-            self.write((initialOffset[0], initialOffset[1] + i + labelOffset[1]), label)
+        for i, labels in enumerate(table["labels"]["col"]):
+            self.write((offset[0], offset[1] + i + labelOffset[1]), " - ".join(labels))
 
-        offset = map(add, initialOffset, labelOffset)
+        dataOffset = map(add, offset, labelOffset)
 
         # Data
         for i, line in enumerate(table["data"]):
             for j, entry in enumerate(line):
-                self.write((offset[0] + i, offset[1] + j), entry)
+                self.write((dataOffset[0] + i, dataOffset[1] + j), entry)
 
 
     def save(self):

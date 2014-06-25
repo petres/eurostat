@@ -32,7 +32,6 @@ from datetime import datetime
 
 import copy
 
-
 #----------------------------------------------
 #----- SETTINGS -------------------------------
 #----------------------------------------------
@@ -546,15 +545,6 @@ def getStringOfPreset(options):
 def getPresetFromFile(fileName):
     with open(fileName, 'r') as presetFile:
         return sj.loads(presetFile.read())
-
-def runPreset(fileName):
-    export(getPresetFromFile(fileName))
-
-def runPresetsFromCL(fileList):
-    for i, file in enumerate(fileList):
-        log(str(i+1) + "/" + str(len(fileList)) + " Executing preset of file " + file.name + " ... ")
-        export(sj.loads(file.read()))
-        log("DONE")
 
 #----------------------------------------------
 

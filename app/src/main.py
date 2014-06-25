@@ -5,7 +5,7 @@ from PyQt4 import QtGui
 
 # HELPERS AND SETTINGS
 from helpers import Settings
-import helpers as f
+from exportFunctions import runPresetsFromCL
 
 import argparse
 
@@ -27,7 +27,7 @@ parser.add_argument('--presets', '-p', metavar = 'preset', type = argparse.FileT
 def main():
     args = parser.parse_args()
     if args.presets is not None:
-        f.runPresetsFromCL(args.presets)
+        runPresetsFromCL(args.presets)
         exit()
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName(Settings.applicationName)

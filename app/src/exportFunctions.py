@@ -15,9 +15,12 @@ from PyQt4 import QtCore, QtGui
 # ITERTOOLS FOR PERMUTATIONS
 import itertools
 
+# SIMPLEJSON
+import simplejson as sj
 
-from helpers import Settings, Worker
-import helpers as f
+from helpers import Settings, Worker, log
+
+import copy
 
 class ExportWorker(Worker):
     title = "Export ... "
@@ -61,11 +64,8 @@ def export(options, progressControl = None):
 
     if len(structure["tab"]) == 0:
         writer.changeActiveSheet(options["tabName"])
-        writer.write((1, 0), "Name:")
-        writer.write((1, 1), options["name"])
 
-        writer.write((1, 0), "Preset:")
-        writer.write((1, 1), f.getStringOfPreset(options))
+        writer.writeHeader(options)
 
         table = _prepareTable(data, options)
         writer.writeTable(table)
@@ -124,11 +124,22 @@ def _prepareTable(data, options, fixed = {}):
     colP = list(itertools.product(*cols))
     rowP = list(itertools.product(*rows))
 
-    table = { "rowLabelsStructure": structure["row"],
-              "colLabelsStructure": structure["col"],
-              "rowLabels": rowP,
-              "colLabels": colP,
-              "data":      []}
+    table = {   "structure": { 
+                        "row": [],
+                        "col": []
+                    },
+                "labels":   { 
+                        "row": rowP,
+                        "col": colP
+                    },
+                "data": []}
+
+    for dim in ["col", "row"]:
+        for i, item in enumerate(structure[dim]):
+            toAppend = {"count": len(selection[item]), "name": item}
+            if len(selection[item]) == 1:
+                toAppend["value"] = selection[item][0]
+            table["structure"][dim].append(toAppend)
 
     for r in rowP:
         values = []
@@ -152,7 +163,7 @@ def _prepareTable(data, options, fixed = {}):
                 value = data["data"][key]
 
             if value is None:
-                value = Settings.exportEmptyCellSign
+                value = emptyCellSign
 
             values.append(value)
         table["data"].append(values)
@@ -201,3 +212,15 @@ def _prepareData(name, selection = None):
     return data
 
 #----------------------------------------------
+
+
+
+def runPresetsFromCL(fileList):
+    for i, file in enumerate(fileList):
+        log(str(i+1) + "/" + str(len(fileList)) + " Executing preset of file " + file.name + " ... ")
+        export(sj.loads(file.read()))
+        log("DONE")
+
+
+def runPreset(fileName):
+    export(getPresetFromFile(fileName))
