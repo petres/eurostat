@@ -19,9 +19,6 @@ class Writer():
     def __init__(self, options):
         self.overwrite = options["overwrite"]
         self.fileName = options["fileName"]
-
-        print "Creating Writer", self.fileName, self.overwrite
-
         self.existingSheets = []
         self.opened = False
         self.sheetCreated = False
@@ -29,16 +26,12 @@ class Writer():
 
     def open(self):
         if self.overwrite == "File":
-            print "Creating New File"
             wb = Workbook()
         else:
             try:
                 wb = load_workbook(self.fileName)
                 self.existingSheets = wb.get_sheet_names()
-                print "Using old file, has sheets:", self.existingSheets
             except Exception as e:
-                print "Creating New File, but have tried to use old one"
-                print e
                 wb = Workbook()
 
         self.wb = wb
@@ -54,15 +47,12 @@ class Writer():
 
         if name in self.existingSheets:
             if self.overwrite == "Sheet":
-                print "Replacing Sheet", name
                 self.wb.remove_sheet(self.wb[name])
                 ws = self.wb.create_sheet()
                 ws.title = name
             else:
-                print "Using existing Sheet", name
                 ws = self.wb[name]
         else:
-            print "Creating New Sheet", name
             ws = self.wb.create_sheet()
             ws.title = name
 
@@ -104,6 +94,12 @@ class Writer():
                 self.write((initialOffset[0] + tableOffsetRow, 1), label["value"])
                 self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(label["name"], label["value"]))
                 tableOffsetRow += 1
+
+        for crit in table["structure"]["fixed"]:
+            self.write((initialOffset[0] + tableOffsetRow, 0), crit)
+            self.write((initialOffset[0] + tableOffsetRow, 1), table["structure"]["fixed"][crit])
+            self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(crit, table["structure"]["fixed"][crit]))
+            tableOffsetRow += 1
 
         tableOffset = (tableOffsetRow + 2, 0)
         offset = map(add, initialOffset, tableOffset)

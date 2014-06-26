@@ -64,9 +64,7 @@ def export(options, progressControl = None):
 
     if len(structure["sheet"]) == 0:
         writer.changeActiveSheet(options["sheetName"])
-
         writer.writeHeader(options)
-
         table = _prepareTable(data, options)
         writer.writeTable(table, options)
     else:
@@ -88,8 +86,8 @@ def export(options, progressControl = None):
             table = _prepareTable(data, options, fixed = fixed)
             
             writer.changeActiveSheet(sheetName)
+            writer.writeHeader(options)
             writer.writeTable(table, options)
-
 
     if progressControl is not None:
         progressControl.setStep(3)
@@ -122,7 +120,8 @@ def _prepareTable(data, options, fixed = {}):
 
     table = {   "structure": { 
                         "row": [],
-                        "col": []
+                        "col": [],
+                        "fixed" : fixed
                     },
                 "labels":   { 
                         "row": [],
@@ -136,6 +135,8 @@ def _prepareTable(data, options, fixed = {}):
             if len(selection[item]) == 1:
                 toAppend["value"] = selection[item][0]
             table["structure"][dim].append(toAppend)
+
+
 
 
     for dim in ["col", "row"]:
@@ -236,7 +237,7 @@ def runPresetsFromCL(fileList):
     for i, file in enumerate(fileList):
         log(str(i+1) + "/" + str(len(fileList)) + " Executing preset of file " + file.name + " ... ")
         export(sj.loads(file.read()))
-        log("DONE")
+        #log("DONE")
 
 
 def runPreset(fileName):

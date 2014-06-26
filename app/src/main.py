@@ -14,6 +14,14 @@ dirname = os.path.dirname(abspath)
 os.chdir(os.path.join(dirname, "..", ".."))
 
 
+def is_dir(dirname):
+    """Checks if a path is an actual directory"""
+    if not os.path.isdir(dirname):
+        msg = "{0} is not a directory".format(dirname)
+        raise argparse.ArgumentTypeError(msg)
+    else:
+        return dirname
+
 parser = argparse.ArgumentParser(description = 'Eurostat Bulk Downloader: This program allows the download of \
                                   eurostat bulk datasets and the export it afterward filtered and sorted in other file formats \
                                   (for example excel). Without any arguments a GUI will be opened where the source and the export can be configured. \
@@ -23,12 +31,25 @@ parser = argparse.ArgumentParser(description = 'Eurostat Bulk Downloader: This p
 parser.add_argument('--presets', '-p', metavar = 'preset', type = argparse.FileType('r'), nargs = '+',
                    help = 'Add presets which will be executed. No GUI will be opened!')
 
+parser.add_argument('--folders', '-f', metavar = 'folder', type = is_dir, nargs = '+',
+                   help = 'Add preset folders which will be executed. No GUI will be opened!')
+
 
 def main():
     args = parser.parse_args()
+
+    if args.folders is not None:
+        if args.presets is None:
+            args.presets = [] 
+        for folder in args.folders:
+            for f in os.listdir(folder):
+                if f[-7:] == ".preset":
+                    args.presets.append(open(os.path.join(folder,f), "r"))
+
     if args.presets is not None:
         runPresetsFromCL(args.presets)
         exit()
+
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName(Settings.applicationName)
     
