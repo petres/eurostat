@@ -18,7 +18,7 @@ import itertools
 # SIMPLEJSON
 import simplejson as sj
 
-from helpers import Settings, Worker, log
+from helpers import Settings, Worker, log, findInDict
 
 import copy
 
@@ -62,33 +62,33 @@ def export(options, progressControl = None):
     if progressControl is not None:
         progressControl.setStep(2)
 
-    if len(structure["tab"]) == 0:
-        writer.changeActiveSheet(options["tabName"])
+    if len(structure["sheet"]) == 0:
+        writer.changeActiveSheet(options["sheetName"])
 
         writer.writeHeader(options)
 
         table = _prepareTable(data, options)
-        writer.writeTable(table)
+        writer.writeTable(table, options)
     else:
-        tab = []
-        for i in structure["tab"]:
-            tab.append(selection[i])
+        sheet = []
+        for i in structure["sheet"]:
+            sheet.append(selection[i])
 
-        tabP = list(itertools.product(*tab))
+        sheetP = list(itertools.product(*sheet))
 
-        for t in tabP:
-            tabName = ""
+        for t in sheetP:
+            sheetName = ""
             for i in t:
-                tabName += str(i)
+                sheetName += str(i)
 
             fixed = {}
-            for i, j in enumerate(structure["tab"]):
+            for i, j in enumerate(structure["sheet"]):
                 fixed[j] = t[i]
 
             table = _prepareTable(data, options, fixed = fixed)
             
-            writer.changeActiveSheet(tabName)
-            writer.writeTable(table)
+            writer.changeActiveSheet(sheetName)
+            writer.writeTable(table, options)
 
 
     if progressControl is not None:
@@ -105,32 +105,28 @@ def _sortingBeforeExport(selection, sorting = {}):
             selection[entry] = sorted(selection[entry])
 
 
-
 def _prepareTable(data, options, fixed = {}):
     structure = options["structure"]
     selection = options["selection"]
     emptyCellSign = options["emptyCellSign"]
 
-    cols = []
-    for i in structure["col"]:
-        cols.append(selection[i])
-
-    rows = []
-    for i in structure["row"]:
-        rows.append(selection[i])
+    s = {}
+    p = {}
+    for dim in ["col", "row"]:
+        s[dim] = []
+        for i in structure[dim]:
+            s[dim].append(selection[i])
+        p[dim] = list(itertools.product(*s[dim]))
 
     baseCols = data["cols"]
-
-    colP = list(itertools.product(*cols))
-    rowP = list(itertools.product(*rows))
 
     table = {   "structure": { 
                         "row": [],
                         "col": []
                     },
                 "labels":   { 
-                        "row": rowP,
-                        "col": colP
+                        "row": [],
+                        "col": []
                     },
                 "data": []}
 
@@ -141,9 +137,21 @@ def _prepareTable(data, options, fixed = {}):
                 toAppend["value"] = selection[item][0]
             table["structure"][dim].append(toAppend)
 
-    for r in rowP:
+
+    for dim in ["col", "row"]:
+        if options["codeLabels"]:
+            table["labels"][dim] = p[dim]
+        else:
+            for e in p[dim]:
+                label = []
+                for i, j in enumerate(e):
+                    label.append(findInDict(structure[dim][i],j))
+                table["labels"][dim].append(label)
+
+
+    for r in p["row"]:
         values = []
-        for c in colP:
+        for c in p["col"]:
             keyList = []
             for bc in baseCols:
                 if bc in structure["col"]:
@@ -161,9 +169,8 @@ def _prepareTable(data, options, fixed = {}):
             value = None
             if key in data["data"]:
                 value = data["data"][key]
-
-            if value is None:
-                value = emptyCellSign
+            else:
+                value = {"value": None, "flag": None}
 
             values.append(value)
         table["data"].append(values)
@@ -173,7 +180,7 @@ def _prepareTable(data, options, fixed = {}):
 
 def _prepareData(name, selection = None):
     time    = []
-    data    = { "data": {}, "cols": []}
+    data    = { "data": {}, "cols": [], "flags": []}
 
     tsvFileName = os.path.join(Settings.dataPath, name + '.tsv')
     with open(tsvFileName, 'r') as tsvFile:
@@ -205,10 +212,20 @@ def _prepareData(name, selection = None):
 
                     key = tuple(keyList + [time[j - 1]])
                     entry = row[j].strip()
-                    if entry == Settings.eurostatEmptyCellSign:
-                        entry = None
 
-                    data["data"][key] = entry
+                    flag = None
+                    if " " in entry:
+                        value = entry.split(' ')[0]
+                        flag = entry.split(' ')[1]
+                        if flag not in data["flags"]:
+                            data["flags"].append(flag)
+                    else:
+                        value = entry
+
+                    if value == Settings.eurostatEmptyCellSign:
+                        value = None
+
+                    data["data"][key] = { "value": value, "flag": flag}
     return data
 
 #----------------------------------------------

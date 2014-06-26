@@ -58,12 +58,13 @@ class Settings():
 
     defaultOptions      = { #"name":            self.metaData["_name"],
                             #"selection":       self.options["selection"],
-                            "structure":        { "tab": [], "col": ["time"]},
-                            "tabName":          "##NAME##",
+                            "structure":        { "sheet": [], "col": ["time"]},
+                            "sheetName":        "##NAME##",
                             "fileType":         "EXCEL",
                             "fileName":         os.path.join('output', '##NAME##.xlsx'),
                             "sorting":          { "time": QtCore.Qt.DescendingOrder },
                             "locales":          "EN",
+                            "shortLabels":      True,
                             "overwrite":        "Sheet",
                             "style":            "Basic",
                             "presetTime":       "Include Newer Periods",
@@ -468,7 +469,7 @@ def findInDict(title, shorty):
     #RETURN: Long-Text of shorts     (Austria...)
 
     if title.upper() == "TIME":    #TIME is the only title without long-text
-        return ""
+        return shorty
 
     longy = ""
 

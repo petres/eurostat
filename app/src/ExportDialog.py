@@ -54,7 +54,7 @@ class ExportDialog(QtGui.QDialog):
         self.ui.localeComboBox.setCurrentIndex(self.ui.localeComboBox.findText(options["locales"]))
 
         # STRUCTURE
-        self.combos = { "tab": { "combo": self.ui.tabCombo, "values": ["None"] + metaData["_cols"]}, 
+        self.combos = { "sheet": { "combo": self.ui.sheetCombo, "values": ["None"] + metaData["_cols"]}, 
                         "row": { "combo": self.ui.rowCombo, "values": metaData["_cols"]}, 
                         "col": { "combo": self.ui.colCombo, "values": metaData["_cols"]}}
 
@@ -77,8 +77,15 @@ class ExportDialog(QtGui.QDialog):
         # FILE NAME
         self.ui.fileEdit.setText(options["fileName"].replace("##NAME##", self.metaData["_name"]))
         # TAB NAME
-        if "tabName" in options:
-            self.ui.tabName.setText(options["tabName"].replace("##NAME##", self.metaData["_name"]))
+        if "sheetName" in options:
+            self.ui.sheetName.setText(options["sheetName"].replace("##NAME##", self.metaData["_name"]))
+
+        if options["codeLabels"]:
+            self.ui.codeRadioButton.setChecked(True)
+            self.ui.labelRadioButton.setChecked(False)
+        else:
+            self.ui.codeRadioButton.setChecked(False)
+            self.ui.labelRadioButton.setChecked(True)
 
 
     def _comboChanged(self, text):
@@ -92,10 +99,10 @@ class ExportDialog(QtGui.QDialog):
                 combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[comboType]["values"]))
             selectedEntries.append(combo.currentText())
 
-        if self.combos["tab"]["combo"].currentText() == "None":
-            self.ui.tabName.setEnabled(True)
+        if self.combos["sheet"]["combo"].currentText() == "None":
+            self.ui.sheetName.setEnabled(True)
         else:
-            self.ui.tabName.setEnabled(False)
+            self.ui.sheetName.setEnabled(False)
 
 
     def _fileSelect(self):
@@ -149,6 +156,7 @@ class ExportDialog(QtGui.QDialog):
                         "fileType":     "EXCEL",
                         "fileName":     str(self.ui.fileEdit.text()),
                         "sorting":      sorting,
+                        "codeLabels":   True if self.ui.codeRadioButton.isChecked() else False,
                         "locales":      str(self.ui.localeComboBox.currentText()),
                         "overwrite":    str(self.ui.overwriteComboBox.currentText()),
                         "style":        str(self.ui.styleComboBox.currentText()),
@@ -156,11 +164,11 @@ class ExportDialog(QtGui.QDialog):
                         "emptyCellSign": str(self.ui.emptyEntryEdit.text())}
 
 
-        if len(structure["tab"]) == 0:
-            tabName = str(self.ui.tabName.text());
-            if len(tabName) == 0:
-                tabName = self.metaData["_name"]
-            self.options["tabName"] = tabName
+        if len(structure["sheet"]) == 0:
+            sheetName = str(self.ui.sheetName.text());
+            if len(sheetName) == 0:
+                sheetName = self.metaData["_name"]
+            self.options["sheetName"] = sheetName
 
         return self.options
 
