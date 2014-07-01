@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>963</width>
+    <width>1056</width>
     <height>497</height>
    </rect>
   </property>
@@ -23,7 +23,7 @@
       <widget class="QGroupBox" name="databasesGroupBox">
        <property name="maximumSize">
         <size>
-         <width>260</width>
+         <width>330</width>
          <height>16777215</height>
         </size>
        </property>
@@ -126,7 +126,14 @@
              <bool>false</bool>
             </property>
             <property name="text">
-             <string>Add new</string>
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="browseButton">
+            <property name="text">
+             <string>Browse ...</string>
             </property>
            </widget>
           </item>

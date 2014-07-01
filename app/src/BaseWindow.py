@@ -10,6 +10,7 @@ from PyQt4 import QtCore, QtGui
 # DIALOGS
 from ExportDialog import ExportDialog
 from ProgressDialog import ProgressDialog
+from TreeDialog import TreeDialog
 
 # HELPERS AND SETTINGS
 from helpers import Settings
@@ -40,6 +41,7 @@ class BaseWindow(QtGui.QDialog):
         self.connect(self.ui.addButton, QtCore.SIGNAL("clicked()"), self._addDB)
         self.connect(self.ui.updateButton, QtCore.SIGNAL("clicked()"), self._updateDBfile)
         self.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self._removeDBfile)
+        self.connect(self.ui.browseButton, QtCore.SIGNAL("clicked()"), self._browse)
 
         self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._loadPreset)
 
@@ -286,6 +288,12 @@ class BaseWindow(QtGui.QDialog):
         dialog = ExportDialog(self)
         dialog.init(self.metaData, self.options)
         dialog.show()
+
+
+    def _browse(self):
+        dialog = TreeDialog(self)
+        dialog.show()
+
 
 
     def _loadPreset(self):

@@ -38,6 +38,9 @@ import copy
 
 class Settings():
     dataPath            = "data"
+    tocXml              = os.path.join('data', 'table_of_contents.xml')
+    tocDict             = os.path.join('data', 'toc.json')
+
     dictPath            = os.path.join('data', 'dict')
     presetPath          = "presets"
 

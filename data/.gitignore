@@ -1,2 +1,4 @@
 *.tsv
-info.json
+*.json
+*.xml
+
