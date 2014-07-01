@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Eurostat Bulk Exporter  by petres</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Eurostat Bulk Exporter </h1>
+        <p>Simple GUI which provides Excel Exports, Working Offline, Presets for recurrent tasks</p>
+
+        <p class="view"><a href="https://github.com/petres/eurostat">View the Project on GitHub <small>petres/eurostat</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/petres/eurostat/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/petres/eurostat/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/petres/eurostat">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h3>
+<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h3>
+
+<p>This program provides a graphical user interface (GUI) which allows <a href="http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download">bulk datasets</a> downloads from <a href="http://epp.eurostat.ec.europa.eu/">eurostat</a>. The downloaded datasets can be filtered, sorted and exported to Excel files. Other export file types will follow (CSV, STATA datasets, R datasets, ...). In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports.</p>
+
+<h4>
+<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h4>
+
+<ul>
+<li>
+<a href="https://www.python.org/">Python</a> &gt; 2.6  (should also work with version 3) | Programming Language</li>
+<li>
+<a href="http://www.riverbankcomputing.com/software/pyqt">PyQt</a> 4 | GUI </li>
+<li>
+<a href="http://openpyxl.readthedocs.org/">openpyxl</a> | Writing Excel Files</li>
+</ul><p>It's working fine with <a href="http://portablepython.com/">Portable Python</a> (2.7.6.1). </p>
+
+<h4>
+<a name="submodule-libraries" class="anchor" href="#submodule-libraries"><span class="octicon octicon-link"></span></a>Submodule Libraries</h4>
+
+<ul>
+<li>
+<a href="http://simplejson.readthedocs.org/">simplejson</a> | Writing/Reading JSON</li>
+</ul><h3>
+<a name="wiki" class="anchor" href="#wiki"><span class="octicon octicon-link"></span></a>Wiki</h3>
+
+<p>If you want to know more about planned features or need a description please read the <a href="http://github.com/petres/eurostat/wiki">Wiki page</a> of this project.</p>
+
+<hr><h3>
+<a name="get-it" class="anchor" href="#get-it"><span class="octicon octicon-link"></span></a>Get it</h3>
+
+<h4>
+<a name="git" class="anchor" href="#git"><span class="octicon octicon-link"></span></a>GIT</h4>
+
+<p>Some libraries are included via submodules, therefore the repo has either to be cloned recursively with 
+<code>git clone --recursive https://github.com/petres/eurostat</code> 
+or the submodules have to be initialized with the command 
+<code>git submodule update --init</code>. </p>
+
+<h4>
+<a name="compressed-files" class="anchor" href="#compressed-files"><span class="octicon octicon-link"></span></a>Compressed Files</h4>
+
+<p>In the near future we will provide <code>zip</code> and <code>tar.gz</code> files.</p>
+
+<h4>
+<a name="executables" class="anchor" href="#executables"><span class="octicon octicon-link"></span></a>Executables</h4>
+
+<p>Maybe at some point in the unknown future.</p>
+
+<hr><h3>
+<a name="run-it" class="anchor" href="#run-it"><span class="octicon octicon-link"></span></a>Run it</h3>
+
+<h4>
+<a name="windows" class="anchor" href="#windows"><span class="octicon octicon-link"></span></a>Windows</h4>
+
+<ol>
+<li> Adjust the paths in the <code>app\utils\config.bat</code> file.</li>
+<li> Convert the <code>*.ui</code> files with the script <code>app\utils\convertUI.bat</code>.</li>
+<li> Call <code>run.bat</code>.</li>
+</ol><p>If your are using Portable Python the paths should look like:</p>
+
+<div class="highlight highlight-Batchfile"><pre><span class="k">set</span> <span class="nv">python</span> <span class="o">=</span> <span class="s2">"D:\some\where\Portable Python\App\python.exe"</span>
+<span class="k">set</span> <span class="nv">pyuic</span>  <span class="o">=</span> <span class="s2">"D:\some\where\Portable Python\App\Lib\site-packages\PyQt4\uic\pyuic.py"</span>
+</pre></div>
+
+<h4>
+<a name="linux" class="anchor" href="#linux"><span class="octicon octicon-link"></span></a>Linux</h4>
+
+<p>It is assumed that <code>python</code> and <code>pyuic4</code> are in your <code>PATH</code> environment variable and <code>make</code> build utility is installed.</p>
+
+<ol>
+<li> Convert the <code>*.ui</code> files by running <code>make</code> in the <code>app/</code> path.</li>
+<li> Call <code>./run.sh</code>.</li>
+</ol>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/petres">petres</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
