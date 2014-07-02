@@ -38,6 +38,8 @@ import copy
 
 class Settings():
     dataPath            = "data"
+
+    tocXmlURL           = "http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=table_of_contents.xml"
     tocXml              = os.path.join('data', 'table_of_contents.xml')
     tocDict             = os.path.join('data', 'toc.json')
 
@@ -69,6 +71,7 @@ class Settings():
                             "locales":          "EN",
                             "shortLabels":      True,
                             "overwrite":        "Sheet",
+                            "codeLabels":       True,
                             "style":            "Basic",
                             "presetTime":       "Include Newer Periods",
                             "emptyCellSign":    ""}

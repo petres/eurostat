@@ -5,20 +5,55 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "simplejson"))
 
 # HELPERS AND SETTINGS
-from helpers import Settings
+from helpers import Settings, Worker, log, findInDict
 
+import simplejson as sj
 
 import xml.etree.ElementTree as ET
 
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
 
-def main(): 
-    print outputJson(getTree())
+
+class TocWorker(Worker):
+    title = "Browse ... "
+    steps = ["Download", "Prepare", "Saving"]
+
+    def __init__(self, parent = None): 
+        Worker.__init__(self, parent)
+
+    def isWorkAndIfStart(self):
+        if not os.path.isfile(Settings.tocDict):
+            self.startWork()
+            return True
+        else:
+            with open(Settings.tocDict, 'r') as infile:
+                self.toc = sj.loads(infile.read())
+        return False
 
 
-def getTree():
-    tree = ET.parse(Settings.tocXml)
-    root = tree.getroot()
-    return outputTree(root)
+    def work(self):
+        self.setStep(0)
+        response = urlopen(Settings.tocXmlURL)
+        with open(Settings.tocXml, 'wb') as outfile:
+            outfile.write(response.read())
+        
+        self.setStep(1)
+
+        tree = ET.parse(Settings.tocXml)
+        root = tree.getroot()
+        output = outputTree(root)
+
+        self.setStep(2)
+
+        with open(Settings.tocDict, 'w') as outfile:
+            outfile.write(sj.dumps(output))
+
+        self.toc = output
 
 
 def outputJson(info, i = 0):
