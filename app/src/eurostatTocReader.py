@@ -21,7 +21,7 @@ except ImportError:
 
 class TocWorker(Worker):
     title = "Browse ... "
-    steps = ["Download", "Prepare", "Saving"]
+    steps = ["Download", "Prepare", "Save"]
 
     def __init__(self, parent = None): 
         Worker.__init__(self, parent)

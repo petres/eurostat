@@ -161,6 +161,7 @@ class Worker(QtCore.QThread):
             self.initGui()
             self.stepTrigger.connect(self.updateGui)
             self.start()
+            self.dialog.exec_()
         else:
             self.work()
 
@@ -179,7 +180,7 @@ class Worker(QtCore.QThread):
     def initGui(self):
         self.dialog = ProgressDialog()
         self.dialog.init(self.title, self.steps)
-        self.dialog.show()
+        
 
 
 

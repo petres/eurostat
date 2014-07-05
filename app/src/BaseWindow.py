@@ -247,7 +247,8 @@ class BaseWindow(QtGui.QDialog):
         self.worker = f.DownloadAndExtractDbWorker(name, parent = self)
         self.worker.startWork()
 
-        self.worker.finishedTrigger.connect(self.updateDBList)
+        #self.worker.finishedTrigger.connect(self.updateDBList)
+        self.updateDBList()
 
 
     def _loadDB(self):   
@@ -264,7 +265,8 @@ class BaseWindow(QtGui.QDialog):
         self.worker = f.LoadDbWorker(name, baseDialog = self, parent = self)
         self.worker.startWork()
 
-        self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
+        #self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
+        self.updateTab(self.worker.metaData)
         
 
     def _addLineEditChanged(self, text):
@@ -287,13 +289,12 @@ class BaseWindow(QtGui.QDialog):
         #---show export option dialog---
         dialog = ExportDialog(self)
         dialog.init(self.metaData, self.options)
-        dialog.show()
+        dialog.exec_()
 
 
     def _browse(self):
         dialog = TreeDialog(self)
-        dialog.show()
-
+        dialog.exec_()
 
 
     def _loadPreset(self):
@@ -308,8 +309,10 @@ class BaseWindow(QtGui.QDialog):
         self.worker = f.LoadDbWorker(options["name"], baseDialog = self, parent = self)
         self.worker.startWork()
 
-        self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
-        self.worker.finishedTrigger.connect(lambda: self.setSelectedCats(options))
+        #self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
+        #self.worker.finishedTrigger.connect(lambda: self.setSelectedCats(options))
+        self.updateTab(self.worker.metaData)
+        self.setSelectedCats(options)
         #f.runPreset(fileName)
 
 

@@ -35,18 +35,25 @@ class TreeDialog(QtGui.QDialog):
         self._emptyHTML = self.ui.textEdit.toHtml()
 
         self._searchWillFollow = False
+        self._selectedDatabase = None
+
+        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False);
 
         self.worker = TocWorker(parent = self)
-        if self.worker.isWorkAndIfStart():
-            self.worker.finishedTrigger.connect(self.init)
-        else:
-            self.init()
+        self.worker.isWorkAndIfStart()
+        self.init()
+        #if self.worker.isWorkAndIfStart():
+        #    self.worker.finishedTrigger.connect(self.init)
+        #else:
+        #    self.init()
 
     def init(self):
         self._addItem(self.worker.toc, self.ui.treeWidget)
         
         self.connect(self.ui.treeWidget, QtCore.SIGNAL("currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem * )"), self._currentItemChanged)
         self.connect(self.ui.searchEdit, QtCore.SIGNAL("textChanged(const QString &)"), self._searchEditTextChanged)
+        self.connect(self, QtCore.SIGNAL("accepted()"), self._accepted)
+        self.connect(self.ui.updateButton, QtCore.SIGNAL("clicked()"), self._update)
 
 
     def _addItem(self, tree, parentItem):
@@ -76,9 +83,13 @@ class TreeDialog(QtGui.QDialog):
         if current._info["type"] == "leaf":
             self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle + " " + current._info["code"])
             self.ui.textEdit.setHtml(current._info["code"] + "<br>" + current._info["title"])
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True);
+            self._selectedDatabase = current._info["code"]
         else:
             self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle) 
             self.ui.textEdit.setHtml(self._emptyHTML)
+            self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False);
+            self._selectedDatabase = None
 
 
     def _searchEditTextChanged(self, searchString):
@@ -112,3 +123,15 @@ class TreeDialog(QtGui.QDialog):
                 item.setForeground(0, QtGui.QColor.fromRgb(0,150,0))
 
         self._searchWillFollow = False
+
+
+    def _update(self):
+        self.worker = TocWorker(parent = self)
+        self.worker.startWork()
+        #self.worker.finishedTrigger.connect(self.init)
+        self.init()
+
+    def _accepted(self):
+        if self._selectedDatabase is not None:
+            self.close()
+            self.main._downloadDB(self._selectedDatabase)

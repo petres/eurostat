@@ -178,6 +178,7 @@ class ExportDialog(QtGui.QDialog):
         self.worker = e.ExportWorker(self.main.options, parent = self)
 
         self.worker.startWork()
-        self.worker.finishedTrigger.connect(self.close)
+        #self.worker.finishedTrigger.connect(self.close)
+        self.close()
 
         
