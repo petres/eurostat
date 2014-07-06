@@ -7,6 +7,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "gui"))
 # QT
 from PyQt4 import QtCore, QtGui
 
+from helpers import Settings
+
 # PROGRESS UI
 import tree
 
@@ -33,6 +35,8 @@ class TreeDialog(QtGui.QDialog):
 
         self._infoGroupBoxTitle = self.ui.infoGroupBox.title()
         self._emptyHTML = self.ui.textEdit.toHtml()
+        with open(Settings.treeInfoHtmlFileName, 'r') as template:
+            self._infoHTML = template.read()
 
         self._searchWillFollow = False
         self._selectedDatabase = None
@@ -81,12 +85,18 @@ class TreeDialog(QtGui.QDialog):
 
     def _currentItemChanged(self, current, previous):
         if current._info["type"] == "leaf":
-            self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle + " " + current._info["code"])
-            self.ui.textEdit.setHtml(current._info["code"] + "<br>" + current._info["title"])
+            #self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle + " " + current._info["code"])
+            #self.ui.textEdit.setHtml(current._info["code"] + "<br>" + current._info["title"])
+            infoHtml = self._infoHTML
+            infoHtml = infoHtml.replace("$code$", current._info["code"]).replace("$name$", current._info["title"])
+
+            #if current._info["metadata"]["html"] is None:
+
+            self.ui.textEdit.setHtml(infoHtml)
             self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True);
             self._selectedDatabase = current._info["code"]
         else:
-            self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle) 
+            #self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle) 
             self.ui.textEdit.setHtml(self._emptyHTML)
             self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False);
             self._selectedDatabase = None

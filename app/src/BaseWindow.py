@@ -66,11 +66,18 @@ class BaseWindow(QtGui.QDialog):
             self.ui.databaseTable.setItem(i, 1, QtGui.QTableWidgetItem(str(info["updatedDate"])))
             self.ui.databaseTable.setItem(i, 2, QtGui.QTableWidgetItem(info["size"]))
 
-            if info["lastCheckedDate"] < (datetime.now() - timedelta(minutes = 10)):
-                newInfo = f.getFileInfoFromEurostat(name)
-                if newInfo["updatedDate"] > info["updatedDate"]:
-                    for j in range(3):
-                        self.ui.databaseTable.item(i, j).setForeground(QtGui.QColor.fromRgb(255,0,0))
+            newerVersionAvailable = False
+            if "newerVersionAvailable" in info and info["newerVersionAvailable"]:
+                newerVersionAvailable = True
+            else:
+                if info["lastCheckedDate"] < (datetime.now() - timedelta(minutes = 60)):
+                    newInfo = f.getFileInfoFromEurostat(name)
+                    if newInfo["updatedDate"] > info["updatedDate"]:
+                        newerVersionAvailable = True
+
+            if newerVersionAvailable:
+                for j in range(3):
+                    self.ui.databaseTable.item(i, j).setForeground(QtGui.QColor.fromRgb(255,0,0))
             #myItem->setForeground(QColor::fromRgb(255,0,0));
 
         #adjust size

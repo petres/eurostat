@@ -113,8 +113,12 @@ def getInfoForDataset(dataset):
             info["code"] = child.text
             continue
         if tag == "metadata":
+            if "metadata" not in info:
+                info["metadata"] = {}
             if child.attrib["format"] == "sdmx":
-                info["metadata"] = child.text
+                info["metadata"]["sdmx"] = child.text
+            if child.attrib["format"] == "html":
+                info["metadata"]["html"] = child.text
             continue
     return  info
 

@@ -43,6 +43,8 @@ class Settings():
     tocXml              = os.path.join('data', 'table_of_contents.xml')
     tocDict             = os.path.join('data', 'toc.json')
 
+    treeInfoHtmlFileName= os.path.join('app', 'gui', 'treeInfo.html')
+
     dictPath            = os.path.join('data', 'dict')
     presetPath          = "presets"
 
@@ -422,6 +424,7 @@ def delFileInfo(name):
 
 
 def getFileInfoFromEurostat(name):
+    log("getFileInfoFromEurostat(" + name + ")")
     eInfo = {}
     eInfo["lastCheckedDate"] = datetime.now()
 
@@ -440,6 +443,9 @@ def getFileInfoFromEurostat(name):
     info = getFileInfoJson()
     if name in info:
         info[name]["lastCheckedDate"] = eInfo["lastCheckedDate"]
+        if eInfo["updatedDate"] > info[name]["updatedDate"]:
+            info[name]["newerVersionAvailable"] = True
+        saveFileInfoJson()
 
     return eInfo
 
