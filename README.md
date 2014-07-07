@@ -5,7 +5,7 @@ This program provides a graphical user interface (GUI) which allows [bulk datase
 #### Dependencies
 * [Python](https://www.python.org/) > 2.6  (should also work with version 3) | Programming Language
 * [PyQt](http://www.riverbankcomputing.com/software/pyqt) 4 | GUI 
-* [openpyxl](http://openpyxl.readthedocs.org/) | Writing Excel Files
+* [openpyxl](http://openpyxl.readthedocs.org/) | Writing Excel Files (in this repo)
 
 It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1). 
 
