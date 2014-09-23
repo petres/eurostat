@@ -1,7 +1,13 @@
+import os, sys
+sys.path.insert(1,os.path.join(os.path.dirname(__file__), "..", "lib"))
+
+
 from openpyxl import Workbook, load_workbook, styles
 from openpyxl.cell import get_column_letter
-from openpyxl.styles import Border, Style, borders, Side, fills, Fill, Color
+from openpyxl.styles import Border, Style, Side, borders, fills, Fill, Color
 
+#import inspect
+#print inspect.getfile(Workbook)
 
 # ADD FOR ADDING TUPLES
 from operator import add
@@ -15,6 +21,11 @@ class Writer():
     dataStyle = Style(border = allBorders)
     labelStyle = Style(border = allBorders, fill = fills.PatternFill(fill_type = fills.FILL_SOLID, fgColor = Color("99ccff"), bgColor = Color("99ccff")))
     flagStyle = Style(border = allBorders, fill = fills.PatternFill(fill_type = fills.FILL_SOLID, fgColor = Color("AAAAAA"), bgColor = Color("AAAAAA")))
+
+    #dataStyle   = None
+    #labelStyle  = None
+    #flagStyle   = None
+
 
     def __init__(self, options):
         self.overwrite = options["overwrite"]
