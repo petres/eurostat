@@ -32,7 +32,7 @@ class Writer():
         self.fileName = options["fileName"]
         self.existingSheets = []
         self.opened = False
-        self.sheetCreated = False
+        #self.sheetCreated = False
 
 
     def open(self):
@@ -53,8 +53,8 @@ class Writer():
         if not self.opened:
             self.open()
 
-        if name == "Sheet":
-            self.sheetCreated = True
+        #if name == "Sheet":
+        #    self.sheetCreated = True
 
         if name in self.existingSheets:
             if self.overwrite == "Sheet":
@@ -68,6 +68,7 @@ class Writer():
             ws.title = name
 
         self.ws = ws
+
 
     def writeHeader(self, options):
         self.write((0, 0), "Name:")
@@ -86,7 +87,7 @@ class Writer():
 
     def write(self, coords, value, style = None):
         self.ws.cell('%s%s'%(get_column_letter(coords[1] + 1), coords[0] + 1)).value = value
-        if style != None:
+        if style is not None:
             self.ws.cell('%s%s'%(get_column_letter(coords[1] + 1), coords[0] + 1)).style = style
 
 
@@ -154,6 +155,6 @@ class Writer():
 
 
     def save(self):
-        if not self.sheetCreated:
-            self.wb.remove_sheet(self.wb["Sheet"])
+        #if not self.sheetCreated:
+        #    self.wb.remove_sheet(self.wb["Sheet"])
         self.wb.save(filename = self.fileName)

@@ -27,6 +27,7 @@ class ExportDialog(QtGui.QDialog):
         self.connect(self.ui.exportButton, QtCore.SIGNAL("clicked()"), self._doExport)
         self.connect(self.ui.fileButton, QtCore.SIGNAL("clicked()"), self._fileSelect)
         self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._saveAsPreset)
+        self.connect(self.ui.indexCheckBox, QtCore.SIGNAL("clicked()"), self._indexHelper)
 
 
     def init(self, metaData, options):
@@ -53,16 +54,26 @@ class ExportDialog(QtGui.QDialog):
         # LOCALES
         self.ui.localeComboBox.setCurrentIndex(self.ui.localeComboBox.findText(options["locales"]))
 
+        #print metaData
+
+        if "time" in metaData["_cols"]:
+            self.ui.indexCheckBox.setEnabled(True)
+            self.ui.indexCombo.addItems(metaData["time"][::-1])
+
+        if "index" in options and options["index"] is not None:
+            self.ui.indexCheckBox.setChecked(True)
+            self.ui.indexCombo.setCurrentIndex(self.ui.indexCombo.findText(options["index"]))
+
         # STRUCTURE
-        self.combos = { "sheet": { "combo": self.ui.sheetCombo, "values": ["None"] + metaData["_cols"]}, 
-                        "row": { "combo": self.ui.rowCombo, "values": metaData["_cols"]}, 
+        self.combos = { "sheet": { "combo": self.ui.sheetCombo, "values": ["None"] + metaData["_cols"]},
+                        "row": { "combo": self.ui.rowCombo, "values": metaData["_cols"]},
                         "col": { "combo": self.ui.colCombo, "values": metaData["_cols"]}}
 
         for comboType in self.combos:
             combo = self.combos[comboType]["combo"]
             combo.addItems(self.combos[comboType]["values"])
             self.connect(combo, QtCore.SIGNAL("currentIndexChanged(QString)"), self._comboChanged)
-        
+
         self.ui.colCombo.setCurrentIndex(1)
         self.ui.colCombo.setCurrentIndex(0)
 
@@ -95,7 +106,7 @@ class ExportDialog(QtGui.QDialog):
             combo = self.combos[comboType]["combo"]
             if combo == sender:
                 continue
-            while combo.currentText() in selectedEntries: 
+            while combo.currentText() in selectedEntries:
                 combo.setCurrentIndex((combo.currentIndex() + 1)%len(self.combos[comboType]["values"]))
             selectedEntries.append(combo.currentText())
 
@@ -104,16 +115,22 @@ class ExportDialog(QtGui.QDialog):
         else:
             self.ui.sheetName.setEnabled(False)
 
+    def _indexHelper(self):
+        if self.ui.indexCheckBox.isChecked():
+            self.ui.indexCombo.setEnabled(True)
+        else:
+            self.ui.indexCombo.setEnabled(False)
+
 
     def _fileSelect(self):
-        fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", self.ui.fileEdit.text(), 
+        fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", self.ui.fileEdit.text(),
                                 "Excel (*.xls)", options = QtGui.QFileDialog.DontConfirmOverwrite)
         if fileName != "":
             self.ui.fileEdit.setText(fileName)
 
 
     def _saveAsPreset(self):
-        fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", Settings.presetFile.replace("##NAME##", self.metaData["_name"]), 
+        fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", Settings.presetFile.replace("##NAME##", self.metaData["_name"]),
                                 "Presets (*.preset)", options = QtGui.QFileDialog.DontConfirmOverwrite)
 
         if fileName == "":
@@ -145,7 +162,7 @@ class ExportDialog(QtGui.QDialog):
                 structure[comboType] = []
             else:
                 structure[comboType] = [str(text)]
-                allCols.remove(text)          
+                allCols.remove(text)
 
         # all not used columns add to row structure
         structure["row"].extend(allCols)
@@ -163,6 +180,10 @@ class ExportDialog(QtGui.QDialog):
                         "presetTime":   str(self.ui.timeComboBox.currentText()),
                         "emptyCellSign": str(self.ui.emptyEntryEdit.text())}
 
+        if self.ui.indexCheckBox.isChecked():
+            self.options["index"] = str(self.ui.indexCombo.currentText())
+        else:
+            self.options["index"] = None
 
         if len(structure["sheet"]) == 0:
             sheetName = str(self.ui.sheetName.text());
@@ -181,4 +202,3 @@ class ExportDialog(QtGui.QDialog):
         #self.worker.finishedTrigger.connect(self.close)
         self.close()
 
-        

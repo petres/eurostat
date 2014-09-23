@@ -117,6 +117,76 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="dataTab">
+      <attribute name="title">
+       <string>Data Manipulation</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <layout class="QFormLayout" name="dataLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="indexLabel">
+           <property name="minimumSize">
+            <size>
+             <width>71</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Index:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QCheckBox" name="indexCheckBox">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Creating</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="baseYearLabel">
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
+             </property>
+             <property name="text">
+              <string>Base Year:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="indexCombo">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>141</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="editable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="optionsTab">
       <attribute name="title">
        <string>Options</string>
