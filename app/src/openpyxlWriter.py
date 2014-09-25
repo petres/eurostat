@@ -95,6 +95,7 @@ class Writer():
         if sheetName is not None:
             changeActiveSheet(sheetName)
 
+
         # Row Labels Labels
         rowLabels = []
         tableOffsetRow = 0
@@ -115,6 +116,9 @@ class Writer():
 
         tableOffset = (tableOffsetRow + 2, 0)
         offset = map(add, initialOffset, tableOffset)
+
+        self.write(offset, "Data:")
+        offset = (offset[0] + 1, offset[1])
 
 
         for i, label in enumerate(rowLabels):
