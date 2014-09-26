@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>416</width>
+    <width>483</width>
     <height>357</height>
    </rect>
   </property>
@@ -93,7 +93,14 @@
           </widget>
          </item>
          <item row="4" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <layout class="QHBoxLayout" name="labelsHorizontalLayout">
+           <item>
+            <widget class="QRadioButton" name="bothRadioButton">
+             <property name="text">
+              <string>Both</string>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="QRadioButton" name="codeRadioButton">
              <property name="text">
@@ -138,7 +145,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <layout class="QHBoxLayout" name="indexHorizontalLayout">
            <item>
             <widget class="QCheckBox" name="indexCheckBox">
              <property name="enabled">
@@ -182,6 +189,37 @@
             </widget>
            </item>
           </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="graphTab">
+      <attribute name="title">
+       <string>Graphs</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <layout class="QFormLayout" name="graphFormLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="graphLabel">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QCheckBox" name="graphCheckBox">
+           <property name="text">
+            <string>CheckBox</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -423,7 +461,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="buttonsHorizontalLayout">
      <property name="spacing">
       <number>6</number>
      </property>

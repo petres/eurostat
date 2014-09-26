@@ -14,6 +14,8 @@ from operator import add
 
 import helpers as f
 
+from plot import addGraph
+
 class Writer():
 
     border = Side(style = borders.BORDER_THIN)
@@ -32,6 +34,7 @@ class Writer():
         self.fileName = options["fileName"]
         self.existingSheets = []
         self.opened = False
+        self.defaultSheets = []
         #self.sheetCreated = False
 
 
@@ -44,6 +47,8 @@ class Writer():
                 self.existingSheets = wb.get_sheet_names()
             except Exception as e:
                 wb = Workbook()
+                self.defaultSheets = wb.get_sheet_names()
+
 
         self.wb = wb
         self.opened = True
@@ -56,7 +61,7 @@ class Writer():
         #if name == "Sheet":
         #    self.sheetCreated = True
 
-        if name in self.existingSheets:
+        if name in self.wb.get_sheet_names():
             if self.overwrite == "Sheet":
                 self.wb.remove_sheet(self.wb[name])
                 ws = self.wb.create_sheet()
@@ -93,7 +98,7 @@ class Writer():
 
     def writeTable(self, table, options, sheetName = None, initialOffset = (6, 0)):
         if sheetName is not None:
-            changeActiveSheet(sheetName)
+            self.changeActiveSheet(sheetName)
 
 
         # Row Labels Labels
@@ -131,14 +136,17 @@ class Writer():
             k = 0
             for j, label in enumerate(labels):
                 if table["structure"]["row"][j]["count"] > 1:
-                    self.write((offset[0] + i + labelOffset[0], offset[1] + k), label, self.labelStyle)
+                    # TODO LABELS
+                    self.write((offset[0] + i + labelOffset[0], offset[1] + k), label["code"], self.labelStyle)
                     k += 1
 
         for i, labels in enumerate(table["labels"]["col"]):
-            self.write((offset[0], offset[1] + i + labelOffset[1]), " - ".join(labels), self.labelStyle)
+            temp = []
+            for j, label in enumerate(labels):
+                temp.append(label["code"])
+            self.write((offset[0], offset[1] + i + labelOffset[1]), " - ".join(temp), self.labelStyle)
 
         dataOffset = map(add, offset, labelOffset)
-
         # Data
         for i, line in enumerate(table["data"]):
             for j, entry in enumerate(line):
@@ -155,10 +163,15 @@ class Writer():
                 except:
                     self.write((dataOffset[0] + i, dataOffset[1] + j), value, style)
 
+        if options["graphs"]:
+            addGraph(self.ws, dataOffset[1])
+
         return (dataOffset[0] + len(table["data"]), dataOffset[1] + len(table["data"][0]))
 
 
     def save(self):
         #if not self.sheetCreated:
         #    self.wb.remove_sheet(self.wb["Sheet"])
+        for s in self.defaultSheets:
+            self.wb.remove_sheet(self.wb[s])
         self.wb.save(filename = self.fileName)

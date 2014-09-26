@@ -91,6 +91,9 @@ class ExportDialog(QtGui.QDialog):
         if "sheetName" in options:
             self.ui.sheetName.setText(options["sheetName"].replace("##NAME##", self.metaData["_name"]))
 
+        if "graphs" in options and options["graphs"]:
+            self.ui.graphCheckBox.setChecked(True)
+
         if options["codeLabels"]:
             self.ui.codeRadioButton.setChecked(True)
             self.ui.labelRadioButton.setChecked(False)
@@ -174,6 +177,7 @@ class ExportDialog(QtGui.QDialog):
                         "fileName":     str(self.ui.fileEdit.text()),
                         "sorting":      sorting,
                         "codeLabels":   True if self.ui.codeRadioButton.isChecked() else False,
+                        "graphs":       True if self.ui.graphCheckBox.isChecked() else False,
                         "locales":      str(self.ui.localeComboBox.currentText()),
                         "overwrite":    str(self.ui.overwriteComboBox.currentText()),
                         "style":        str(self.ui.styleComboBox.currentText()),

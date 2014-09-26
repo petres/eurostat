@@ -52,65 +52,85 @@ lines.append({
 # DIMENSIONS: Sheets, Rows
 graphs = {
     'type'      : 'sheets',
-    'selection' : ['AT', 'DE']}
+    'selection' : ['AT', 'DE', 'ES']}
 
 
-wb = load_workbook(filename = fileName)
+wb = None
 ws = {}
 rowNameToRowNumber = {}
 timeLabels = None
 startRow = 1
 endRow = None
+dataCol = 2
 
-def findRowNumberByRowName(sheet, row):
+def findRowNumberByRowName(sheet = None, row = None):
     t = startRow
-    while t < 1000:
+    while t < 10000:
         t += 1
-        if row == sheet.cell('A%s'%(t)).value:
-            break
+        if isinstance(row, tuple):
+            allI = True
+            for i in range(len(row)):
+                if row[i] != sheet.cell('%s%s'%(get_column_letter(i+1), t)).value:
+                    allI = False
+                    break;
+            if allI == True:
+                break
+        else:
+            #print sheet.cell('A%s'%(t)).value
+            if row == sheet.cell('A%s'%(t)).value:
+                break
 
     return t
 
-def getData(sheet, row):
-    print sheet, row
+def init(sheet = None, sheetName = None):
     global timeLabels, startRow, endRow
-    if sheet not in ws:
-        ws[sheet] = wb.get_sheet_by_name(name = sheet)
-    cSheet = ws[sheet]
-    if row not in rowNameToRowNumber:
-        rowNameToRowNumber[row] = findRowNumberByRowName(cSheet, row)
+    #print sheet
+    if sheet is None:
+        if sheetName not in ws:
+            ws[sheetName] = wb.get_sheet_by_name(name = sheetName)
+            sheet = ws[sheetName]
 
     if timeLabels is None:
         timeLabels = []
-        startRow = findRowNumberByRowName(cSheet, "Data:") + 1
-        endRow = findRowNumberByRowName(cSheet, None)
-        t = 2
+        startRow = findRowNumberByRowName(sheet, "Data:") + 1
+        endRow = findRowNumberByRowName(sheet, None)
+        t = dataCol
         while t < 1000:
-            label = cSheet.cell('%s%s'%( get_column_letter(t), startRow)).value
+            label = sheet.cell('%s%s'%( get_column_letter(t), startRow)).value
             if label is None:
                 break
             timeLabels.append(label)
             t += 1
 
+def getData(sheet = None, sheetName = None, row = None, rowNumber = None):
+    if sheet is None:
+        if sheetName not in ws:
+            ws[sheetName] = wb.get_sheet_by_name(name = sheetName)
+            sheet = ws[sheetName]
 
-    rowNumber = rowNameToRowNumber[row]
+    if rowNumber is None:
+        if row not in rowNameToRowNumber:
+            rowNameToRowNumber[row] = findRowNumberByRowName(sheet, row)
+        rowNumber = rowNameToRowNumber[row]
 
     data = []
 
     for t in range(len(timeLabels)):
-        d = cSheet.cell('%s%s'%( get_column_letter(t+2), rowNumber)).value
+        d = sheet.cell('%s%s'%( get_column_letter(t+dataCol), rowNumber)).value
+        if d == "":
+            d = None
         data.append(d)
 
     return data
 
 def main():
-
-
+    global wb
+    wb = load_workbook(filename = fileName)
     for s1 in graphs['selection']:
         dataParam = {}
         if graphs['type'] == "sheets":
             dataParam['sheet'] = s1
-        elif raphs['type'] == "row":
+        elif graphs['type'] == "row":
             dataParam['row'] = s1
 
 
@@ -151,6 +171,50 @@ def main():
         wb.save(outFileName)
 
 
+def addGraph(sheet, c):
+    global dataCol
+    dataCol = c + 1
+    #print dataCol
+    dataParam = {}
+    dataParam['sheet'] = sheet
+
+    p.figure(figsize=(12.0, 5.0))
+
+    init(sheet = sheet)
+
+    #print startRow, endRow
+    for i in range(startRow + 1, endRow):
+        dataParam['rowNumber'] = i
+        dataParam['sheet'] = sheet
+
+        data = getData(**dataParam)
+
+        #p.plot(range(0, len(data)), data, color = line["color"], label = s2)
+
+        #print data
+        l = []
+        for j in range(1, dataCol):
+            l.append(sheet.cell('%s%s'%( get_column_letter(j), i)).value)
+        p.plot(range(0, len(data)), data, label = " - ".join(l))
+
+    #p.xlabel(timeLabels, rotation='vertical', size = 'x-small')
+    ax = p.gca()
+    ax.yaxis.label.set_size('x-small')
+    p.xticks(range(len(timeLabels)), timeLabels, rotation='vertical', size = 'x-small', multialignment = 'center')
+    #p.xticks(map(add, range(len(data)), [-0.5] * len(data)), timeLabels, rotation='vertical', size = 'x-small', ha = 'right')
+
+    p.legend(loc='best', prop={"size": 'small'}).draw_frame(False)
+    p.grid(True)
+    p.tight_layout()
+
+    imgName = "_tttt" + sheet.title + ".png"
+
+    p.savefig(imgName)
+    img = Image(imgName)
+    img.anchor(sheet['B%s'%(endRow + 1)], anchortype='oneCell')
+    sheet.add_image(img)
+
+    #os.remove("_tttt.png")
 
 
 if __name__ == '__main__':

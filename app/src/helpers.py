@@ -74,9 +74,11 @@ class Settings():
                             "shortLabels":      True,
                             "overwrite":        "Sheet",
                             "codeLabels":       True,
+                            "longLabels":       False,
                             "style":            "Basic",
                             "presetTime":       "Include Newer Periods",
                             "emptyCellSign":    "",
+                            "graphs":           False,
                             "index":            None,}
 
     dateFormat          = '%d/%m/%Y %H:%M:%S'

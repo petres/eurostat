@@ -167,15 +167,19 @@ def _prepareTable(data, options, fixed = {}):
 
 
     for dim in ["col", "row"]:
-        if options["codeLabels"]:
-            table["labels"][dim] = p[dim]
-        else:
-            for e in p[dim]:
-                label = []
-                for i, j in enumerate(e):
-                    label.append(findInDict(structure[dim][i],j))
-                table["labels"][dim].append(label)
-
+##        if options["codeLabels"]:
+##            table["labels"][dim] = p[dim]
+##        else:
+##            for e in p[dim]:
+##                label = []
+##                for i, j in enumerate(e):
+##                    label.append(findInDict(structure[dim][i],j))
+##                table["labels"][dim].append(label)
+        for e in p[dim]:
+            label = []
+            for i, j in enumerate(e):
+                label.append({"code": j, "label": findInDict(structure[dim][i],j)})
+            table["labels"][dim].append(label)
 
     for r in p["row"]:
         values = []
