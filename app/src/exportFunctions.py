@@ -26,7 +26,7 @@ class ExportWorker(Worker):
     title = "Export ... "
     steps = ["Prepare Data", "Sorting", "Writing", "Saving"]
 
-    def __init__(self, options, parent = None): 
+    def __init__(self, options, parent = None):
         Worker.__init__(self, parent)
         self.options = options
 
@@ -52,13 +52,14 @@ def export(options, progressControl = None):
         progressControl.setStep(0)
 
     data = _prepareData(options["name"], selection)
+    _manipulateData(data, options)
 
     # sorting
     if progressControl is not None:
         progressControl.setStep(1)
     _sortingBeforeExport(selection, options["sorting"])
 
-    
+
     if progressControl is not None:
         progressControl.setStep(2)
 
@@ -84,7 +85,7 @@ def export(options, progressControl = None):
                 fixed[j] = t[i]
 
             table = _prepareTable(data, options, fixed = fixed)
-            
+
             writer.changeActiveSheet(sheetName)
             writer.writeHeader(options)
             writer.writeTable(table, options)
@@ -102,6 +103,32 @@ def _sortingBeforeExport(selection, sorting = {}):
         elif sorting[entry] == QtCore.Qt.AscendingOrder:
             selection[entry] = sorted(selection[entry])
 
+def _manipulateData(data, options):
+    if "index" in options and options["index"] != None:
+        baseCols    = data["cols"]
+        selection   = options["selection"]
+
+        s = []
+        for i, bc in enumerate(baseCols):
+            if bc == "time":
+                continue
+            s.append(selection[bc])
+
+
+        p = list(itertools.product(*s))
+        for d in p:
+            compareValue = data["data"][tuple(list(d) + [options["index"]])]["value"]
+
+            for time in options["selection"]["time"]:
+                key = tuple(list(d) + [time])
+                if compareValue is not None and compareValue != 0:
+                    value = data["data"][key]["value"]
+                    if value != None:
+                        data["data"][key]["value"] = value/compareValue*100
+                else:
+                    data["data"][key]["value"] = None
+
+
 
 def _prepareTable(data, options, fixed = {}):
     structure = options["structure"]
@@ -118,12 +145,12 @@ def _prepareTable(data, options, fixed = {}):
 
     baseCols = data["cols"]
 
-    table = {   "structure": { 
+    table = {   "structure": {
                         "row": [],
                         "col": [],
                         "fixed" : fixed
                     },
-                "labels":   { 
+                "labels":   {
                         "row": [],
                         "col": []
                     },
@@ -140,15 +167,19 @@ def _prepareTable(data, options, fixed = {}):
 
 
     for dim in ["col", "row"]:
-        if options["codeLabels"]:
-            table["labels"][dim] = p[dim]
-        else:
-            for e in p[dim]:
-                label = []
-                for i, j in enumerate(e):
-                    label.append(findInDict(structure[dim][i],j))
-                table["labels"][dim].append(label)
-
+##        if options["codeLabels"]:
+##            table["labels"][dim] = p[dim]
+##        else:
+##            for e in p[dim]:
+##                label = []
+##                for i, j in enumerate(e):
+##                    label.append(findInDict(structure[dim][i],j))
+##                table["labels"][dim].append(label)
+        for e in p[dim]:
+            label = []
+            for i, j in enumerate(e):
+                label.append({"code": j, "label": findInDict(structure[dim][i],j)})
+            table["labels"][dim].append(label)
 
     for r in p["row"]:
         values = []
@@ -226,7 +257,10 @@ def _prepareData(name, selection = None):
                     if value == Settings.eurostatEmptyCellSign:
                         value = None
 
-                    data["data"][key] = { "value": value, "flag": flag}
+                    if value is not None:
+                        value = float(value)
+
+                    data["data"][key] = {"value": value, "flag": flag}
     return data
 
 #----------------------------------------------

@@ -75,9 +75,12 @@ class Settings():
                             "shortLabels":      True,
                             "overwrite":        "Sheet",
                             "codeLabels":       True,
+                            "longLabels":       False,
                             "style":            "Basic",
                             "presetTime":       "Include Newer Periods",
-                            "emptyCellSign":    ""}
+                            "emptyCellSign":    "",
+                            "graphs":           False,
+                            "index":            None,}
 
     dateFormat          = '%d/%m/%Y %H:%M:%S'
 #----------------------------------------------
@@ -135,7 +138,7 @@ class Worker(QtCore.QThread):
     stepTrigger = QtCore.pyqtSignal(int, str)
     finishedTrigger = QtCore.pyqtSignal()
 
-    def __init__(self, name, parent = None): 
+    def __init__(self, name, parent = None):
         super(Worker, self).__init__(parent)
         self.name = name
 
@@ -183,7 +186,7 @@ class Worker(QtCore.QThread):
     def initGui(self):
         self.dialog = ProgressDialog()
         self.dialog.init(self.title, self.steps)
-        
+
 
 
 
@@ -191,7 +194,7 @@ class DownloadAndExtractDbWorker(Worker):
     title = "Get Database ... "
     steps = ["Download File", "Extracting", "Get File Info"]
 
-    def __init__(self, name, parent = None): 
+    def __init__(self, name, parent = None):
         Worker.__init__(self, parent)
         self.name = name
 
@@ -210,7 +213,7 @@ class LoadDbWorker(Worker):
     title = "Loading Database ... "
     steps = ["Loading Categories"]
 
-    def __init__(self, name, baseDialog, parent = None): 
+    def __init__(self, name, baseDialog, parent = None):
         Worker.__init__(self, parent)
         self.name = name
         self.baseDialog = baseDialog
@@ -435,7 +438,7 @@ def getFileInfoFromEurostat(name):
     for line in response:
         if name in line:
             break
-    
+
     eInfo["size"] = line.split("</td>")[1].split(">")[1]
 
     dateString = line.split("</td>")[3].split("&nbsp;")[1]
@@ -455,7 +458,7 @@ def addFileInfo(name, extractedDate):
     eurostatInfo = getFileInfoFromEurostat(name)
 
     info = getFileInfoJson()
-    info[name] = {"size": eurostatInfo["size"], "updatedDate": eurostatInfo["updatedDate"], 
+    info[name] = {"size": eurostatInfo["size"], "updatedDate": eurostatInfo["updatedDate"],
                 "extractedDate": extractedDate, "lastCheckedDate": eurostatInfo["lastCheckedDate"] }
 
 

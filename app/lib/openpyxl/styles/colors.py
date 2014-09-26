@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 # Copyright (c) 2010-2014 openpyxl
 
-from openpyxl.compat import safe_string
+import re
+from openpyxl.compat import safe_string, basestring
+from openpyxl.descriptors import Descriptor, Typed
 
 from .hashable import HashableObject
-from openpyxl.descriptors import String, Bool, Float, MinMax, Integer, Alias, Set
+from openpyxl.descriptors import String, Bool, MinMax, Integer
 
 # Default Color Index as per 18.8.27 of ECMA Part 4
 COLOR_INDEX = (
@@ -35,10 +37,24 @@ YELLOW = COLOR_INDEX[5]
 DARKYELLOW = COLOR_INDEX[19]
 
 
+aRGB_REGEX = re.compile("^([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6})$")
+
+
+class RGB(Descriptor):
+
+    def __set__(self, instance, value):
+        m = aRGB_REGEX.match(value)
+        if m is None:
+            raise ValueError("Colors must be aRGB hex values")
+        if len(value) == 6:
+            value = "00" + value
+        super(RGB, self).__set__(instance, value)
+
+
 class Color(HashableObject):
     """Named colors for use in styles."""
 
-    rgb = String()
+    rgb = RGB()
     indexed = Integer()
     auto = Bool()
     theme = Integer()
@@ -80,3 +96,12 @@ class Color(HashableObject):
         # legacy
         return self.value
 
+
+class ColorDescriptor(Typed):
+
+    expected_type = Color
+
+    def __set__(self, instance, value):
+        if isinstance(value, basestring):
+            value = Color(rgb=value)
+        super(ColorDescriptor, self).__set__(instance, value)

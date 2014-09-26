@@ -22,12 +22,11 @@ from __future__ import absolute_import
 # @license: http://www.opensource.org/licenses/mit-license.php
 # @author: see AUTHORS file
 
-from openpyxl.descriptors import Float, Set, Sequence, Alias, Typed
+from openpyxl.descriptors import Float, Set, Sequence, Alias
 from openpyxl.compat import safe_string
 
-from .colors import WHITE, Color
+from .colors import ColorDescriptor, Color
 from .hashable import HashableObject
-import warnings
 
 
 FILL_NONE = 'none'
@@ -79,9 +78,9 @@ class PatternFill(Fill):
 
     patternType = Set(values=fills)
     fill_type = Alias("patternType")
-    fgColor = Typed(expected_type=Color)
+    fgColor = ColorDescriptor()
     start_color = Alias("fgColor")
-    bgColor = Typed(expected_type=Color)
+    bgColor = ColorDescriptor()
     end_color = Alias("bgColor")
 
     def __init__(self, patternType=FILL_NONE, fgColor=Color(), bgColor=Color(),
