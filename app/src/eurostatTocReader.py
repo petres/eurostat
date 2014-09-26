@@ -18,7 +18,7 @@ except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import urlopen
 
-
+dictByName = {}
 class TocWorker(Worker):
     title = "Browse ... "
     steps = ["Download", "Prepare", "Save"]
@@ -53,6 +53,9 @@ class TocWorker(Worker):
         with open(Settings.tocDict, 'w') as outfile:
             outfile.write(sj.dumps(output))
 
+        with open(Settings.dictByName, 'w') as outfile:
+            outfile.write(sj.dumps(dictByName))
+
         self.toc = output
 
 
@@ -68,6 +71,8 @@ def outputJson(info, i = 0):
             print " " * i, info["title"]
         if "children" in info:
             outputJson(info["children"], i)
+
+
 
 
 def outputTree(tree):
@@ -100,7 +105,9 @@ def getInfoForBranch(branch):
     return  info
 
 
+
 def getInfoForDataset(dataset):
+    global dictByName
     info = {}
     info["type"] = "leaf"
     for child in dataset:
@@ -120,6 +127,7 @@ def getInfoForDataset(dataset):
             if child.attrib["format"] == "html":
                 info["metadata"]["html"] = child.text
             continue
+    dictByName[info["code"]] = info
     return  info
 
 

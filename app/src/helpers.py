@@ -42,6 +42,7 @@ class Settings():
     tocXmlURL           = "http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=table_of_contents.xml"
     tocXml              = os.path.join('data', 'table_of_contents.xml')
     tocDict             = os.path.join('data', 'toc.json')
+    dictByName          = os.path.join('data', 'dictByName.json')
 
     treeInfoHtmlFileName= os.path.join('app', 'gui', 'treeInfo.html')
 
