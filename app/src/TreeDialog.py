@@ -52,8 +52,9 @@ class TreeDialog(QtGui.QDialog):
         #    self.init()
 
     def init(self):
+        self.ui.treeWidget.clear()
         self._addItem(self.worker.toc, self.ui.treeWidget)
-        
+
         self.connect(self.ui.treeWidget, QtCore.SIGNAL("currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem * )"), self._currentItemChanged)
         self.connect(self.ui.searchEdit, QtCore.SIGNAL("textChanged(const QString &)"), self._searchEditTextChanged)
         self.connect(self, QtCore.SIGNAL("accepted()"), self._accepted)
@@ -96,7 +97,7 @@ class TreeDialog(QtGui.QDialog):
             self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True);
             self._selectedDatabase = current._info["code"]
         else:
-            #self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle) 
+            #self.ui.infoGroupBox.setTitle(self._infoGroupBoxTitle)
             self.ui.textEdit.setHtml(self._emptyHTML)
             self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False);
             self._selectedDatabase = None
@@ -109,7 +110,7 @@ class TreeDialog(QtGui.QDialog):
 
 
     def _search(self):
-        searchString = str(self.ui.searchEdit.text()) 
+        searchString = str(self.ui.searchEdit.text())
 
         for item in self._allItems:
             item._matched = 0

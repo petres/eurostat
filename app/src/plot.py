@@ -4,6 +4,7 @@
 import os, sys
 sys.path.insert(1,os.path.join(os.path.dirname(__file__), "..", "lib"))
 
+from helpers import Settings
 
 # **********************************
 # ** LIBS
@@ -17,6 +18,8 @@ from openpyxl import load_workbook
 from openpyxl.cell import get_column_letter, column_index_from_string
 from openpyxl.workbook import Workbook
 from openpyxl.drawing import Image
+
+from openpyxl.charts import LineChart, Reference, Series
 
 # MATPLOTLIB (draws graphs)
 import matplotlib
@@ -215,6 +218,69 @@ def addGraph(sheet, c):
     sheet.add_image(img)
 
     #os.remove("_tttt.png")
+
+
+def addGraph2(sheet, c):
+    global dataCol
+    dataCol = c + 1
+    #print dataCol
+    dataParam = {}
+    dataParam['sheet'] = sheet
+
+    p.figure(figsize=(12.0, 5.0))
+
+    init(sheet = sheet)
+
+    #print startRow, endRow
+    for i in range(startRow + 1, endRow):
+        dataParam['rowNumber'] = i
+        dataParam['sheet'] = sheet
+
+        data = getData(**dataParam)
+
+        #p.plot(range(0, len(data)), data, color = line["color"], label = s2)
+
+        #print data
+        l = []
+        for j in range(1, dataCol):
+            l.append(sheet.cell('%s%s'%( get_column_letter(j), i)).value)
+        p.plot(range(0, len(data)), data, label = " - ".join(l))
+
+    #p.xlabel(timeLabels, rotation='vertical', size = 'x-small')
+    ax = p.gca()
+    ax.yaxis.label.set_size('x-small')
+    p.xticks(range(len(timeLabels)), timeLabels, rotation='vertical', size = 'x-small', multialignment = 'center')
+    #p.xticks(map(add, range(len(data)), [-0.5] * len(data)), timeLabels, rotation='vertical', size = 'x-small', ha = 'right')
+
+    p.legend(loc='best', prop={"size": 'small'}).draw_frame(False)
+    p.grid(True)
+    p.tight_layout()
+
+    imgName = os.path.join(Settings.tmpPath, "img"  + sheet.title + ".png")
+
+    p.savefig(imgName)
+    img = Image(imgName)
+    img.anchor(sheet['B%s'%(endRow + 1)], anchortype='oneCell')
+    sheet.add_image(img)
+
+
+def addGraph(sheet, c):
+    global dataCol
+    dataCol = c + 1
+    #print dataCol
+    dataParam = {}
+    dataParam['sheet'] = sheet
+
+    init(sheet = sheet)
+
+    values = Reference(sheet, (dataCol, startRow + 1), (dataCol + len(timeLabels), startRow + 1))
+    print "Reference", (dataCol, startRow + 1), (dataCol + len(timeLabels), startRow + 1)
+    series = Series(values, title="First series of values")
+    chart = LineChart()
+    chart.append(series)
+    sheet.add_chart(chart)
+
+
 
 
 if __name__ == '__main__':

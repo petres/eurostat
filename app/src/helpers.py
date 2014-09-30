@@ -48,6 +48,7 @@ class Settings():
 
     dictPath            = os.path.join('data', 'dict')
     presetPath          = "presets"
+    tmpPath             = "tmp"
 
     dataInfoFile        = os.path.join('data', 'info.json')
 
