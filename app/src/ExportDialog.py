@@ -91,8 +91,12 @@ class ExportDialog(QtGui.QDialog):
         if "sheetName" in options:
             self.ui.sheetName.setText(options["sheetName"].replace("##NAME##", self.metaData["_name"]))
 
-        if "graphs" in options and options["graphs"]:
-            self.ui.graphCheckBox.setChecked(True)
+        self.ui.graphDisabledButton.setChecked(True)
+        if "graphs" in options:
+            if options["graphs"] == "excel":
+                self.ui.graphExcelButton.setChecked(True)
+            elif options["graphs"] == "image":
+                self.ui.graphImageButton.setChecked(True)
 
         if options["codeLabels"]:
             self.ui.codeRadioButton.setChecked(True)
@@ -177,7 +181,6 @@ class ExportDialog(QtGui.QDialog):
                         "fileName":     str(self.ui.fileEdit.text()),
                         "sorting":      sorting,
                         "codeLabels":   True if self.ui.codeRadioButton.isChecked() else False,
-                        "graphs":       True if self.ui.graphCheckBox.isChecked() else False,
                         "locales":      str(self.ui.localeComboBox.currentText()),
                         "overwrite":    str(self.ui.overwriteComboBox.currentText()),
                         "style":        str(self.ui.styleComboBox.currentText()),
@@ -188,6 +191,13 @@ class ExportDialog(QtGui.QDialog):
             self.options["index"] = str(self.ui.indexCombo.currentText())
         else:
             self.options["index"] = None
+
+        if self.ui.graphDisabledButton.isChecked():
+            self.options["graphs"] = None
+        if self.ui.graphExcelButton.isChecked():
+            self.options["graphs"] = "excel"
+        if self.ui.graphImageButton.isChecked():
+            self.options["graphs"] = "image"
 
         if len(structure["sheet"]) == 0:
             sheetName = str(self.ui.sheetName.text());

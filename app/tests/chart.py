@@ -9,11 +9,12 @@ from openpyxl.cell import get_column_letter
 wb = Workbook()
 ws = wb.active
 for i in range(10):
-    ws.cell('%s%s'%(get_column_letter(i + 1),  1)).value = i
+    ws.cell('%s%s'%(get_column_letter(i + 2),  1)).value = i
 
 
-values = Reference(ws, (1, 1), (1, 10))
-series = Series(values, title="First series of values")
+values = Reference(ws, (1, 2), (1, 11))
+title = Reference(ws, (1, 1), (1, 1))
+series = Series(values, title=title)
 chart = LineChart()
 chart.append(series)
 ws.add_chart(chart)

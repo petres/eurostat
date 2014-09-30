@@ -80,7 +80,7 @@ class Settings():
                             "style":            "Basic",
                             "presetTime":       "Include Newer Periods",
                             "emptyCellSign":    "",
-                            "graphs":           False,
+                            "graphs":           None,
                             "index":            None,}
 
     dateFormat          = '%d/%m/%Y %H:%M:%S'

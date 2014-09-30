@@ -220,7 +220,7 @@ def addGraph(sheet, c):
     #os.remove("_tttt.png")
 
 
-def addGraph2(sheet, c):
+def addImageGraph(sheet, c):
     global dataCol
     dataCol = c + 1
     #print dataCol
@@ -264,7 +264,7 @@ def addGraph2(sheet, c):
     sheet.add_image(img)
 
 
-def addGraph(sheet, c):
+def addExcelGraph(sheet, c):
     global dataCol
     dataCol = c + 1
     #print dataCol
@@ -273,14 +273,20 @@ def addGraph(sheet, c):
 
     init(sheet = sheet)
 
-    values = Reference(sheet, (dataCol, startRow + 1), (dataCol + len(timeLabels), startRow + 1))
-    print "Reference", (dataCol, startRow + 1), (dataCol + len(timeLabels), startRow + 1)
-    series = Series(values, title="First series of values")
+    labels = Reference(sheet, (startRow,  dataCol), (startRow, dataCol + len(timeLabels)))
     chart = LineChart()
-    chart.append(series)
+
+    for i in range(startRow + 1, endRow):
+        #xvalues = Reference(sheet, (startRow + 1,  dataCol), (startRow + 1, dataCol + len(timeLabels)))
+        title = []
+        for ii in range(1, dataCol):
+            title.append(sheet.cell('%s%s'%(get_column_letter(ii), i)).value)
+        values = Reference(sheet, (i,  dataCol), (i, dataCol + len(timeLabels)))
+        #print "Reference", (dataCol, startRow + 1), (dataCol + len(timeLabels), startRow + 1)
+        series = Series(values, title=" - ".join(title), labels = labels)
+        chart.append(series)
+
     sheet.add_chart(chart)
-
-
 
 
 if __name__ == '__main__':

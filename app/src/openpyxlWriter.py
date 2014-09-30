@@ -14,7 +14,7 @@ from operator import add
 
 import helpers as f
 
-from plot import addGraph
+from plot import addImageGraph, addExcelGraph
 
 class Writer():
 
@@ -163,8 +163,10 @@ class Writer():
                 except:
                     self.write((dataOffset[0] + i, dataOffset[1] + j), value, style)
 
-        if options["graphs"]:
-            addGraph(self.ws, dataOffset[1])
+        if options["graphs"] == "image":
+            addImageGraph(self.ws, dataOffset[1])
+        elif options["graphs"] == "excel":
+            addExcelGraph(self.ws, dataOffset[1])
 
         return (dataOffset[0] + len(table["data"]), dataOffset[1] + len(table["data"][0]))
 
