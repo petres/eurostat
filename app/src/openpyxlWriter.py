@@ -126,10 +126,18 @@ class Writer():
         offset = (offset[0] + 1, offset[1])
 
 
-        for i, label in enumerate(rowLabels):
-            self.write((offset[0], offset[1] + i), label.upper(), self.labelStyle)
+        labelsOutputFormat = []
+        if options["codeLabels"]:
+            labelsOutputFormat.append("code")
+        if options["longLabels"]:
+            labelsOutputFormat.append("long")
 
-        labelOffset = (1, len(rowLabels))
+        for i, label in enumerate(rowLabels):
+            for j, l in enumerate(labelsOutputFormat):
+                self.write((offset[0], offset[1] + i*len(labelsOutputFormat) + j), label.upper(), self.labelStyle)
+
+
+        labelOffset = (1, len(rowLabels) * len(labelsOutputFormat))
 
         # Labels
         for i, labels in enumerate(table["labels"]["row"]):
@@ -137,8 +145,9 @@ class Writer():
             for j, label in enumerate(labels):
                 if table["structure"]["row"][j]["count"] > 1:
                     # TODO LABELS
-                    self.write((offset[0] + i + labelOffset[0], offset[1] + k), label["code"], self.labelStyle)
-                    k += 1
+                    for l in labelsOutputFormat:
+                        self.write((offset[0] + i + labelOffset[0], offset[1] + k), label[l], self.labelStyle)
+                        k += 1
 
         for i, labels in enumerate(table["labels"]["col"]):
             temp = []

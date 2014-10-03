@@ -178,7 +178,7 @@ def _prepareTable(data, options, fixed = {}):
         for e in p[dim]:
             label = []
             for i, j in enumerate(e):
-                label.append({"code": j, "label": findInDict(structure[dim][i],j)})
+                label.append({"code": j, "long": findInDict(structure[dim][i],j)})
             table["labels"][dim].append(label)
 
     for r in p["row"]:
