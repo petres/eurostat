@@ -3,6 +3,9 @@
 This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/). The downloaded datasets can be filtered, sorted and exported to Excel files. Other export file types will follow (CSV, STATA datasets, R datasets, ...). 
 In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports. It also allows the automatic creation of charts in Excel files.
 
+#### Screenshot
+![Screenshot](//raw.githubusercontent.com/petres/eurostat/gh-pages/mainOverview.png)
+
 #### Dependencies
 * [Python](https://www.python.org/) > 2.6  (should also work with version 3) | Programming Language
 * [PyQt](http://www.riverbankcomputing.com/software/pyqt) 4 | GUI 
