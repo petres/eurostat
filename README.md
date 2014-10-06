@@ -4,7 +4,7 @@ This program provides a graphical user interface (GUI) which allows [bulk datase
 In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports. It also allows the automatic creation of charts in Excel files.
 
 #### Screenshot
-![Screenshot](//raw.githubusercontent.com/petres/eurostat/gh-pages/mainOverview.png)
+![Screenshot](https://raw.githubusercontent.com/petres/eurostat/gh-pages/mainOverview.png)
 
 #### Dependencies
 * [Python](https://www.python.org/) > 2.6  (should also work with version 3) | Programming Language
