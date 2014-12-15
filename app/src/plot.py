@@ -150,7 +150,7 @@ def main():
                 s2 = line['sheet']
                 dataParam['sheet'] = s2
 
-            print dataParam
+            print(dataParam)
             data = getData(**dataParam)
 
             p.plot(range(0, len(data)), data, color=line["color"], label = s2)
@@ -293,5 +293,5 @@ if __name__ == '__main__':
     try:
         main()
     except (KeyboardInterrupt):
-        print "KeyboardInterrupt"
+        print("KeyboardInterrupt")
 
