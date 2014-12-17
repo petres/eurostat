@@ -75,7 +75,7 @@ class Settings():
                             "structure":        { "sheet": [], "col": ["time"]},
                             "sheetName":        "##NAME##",
                             "fileType":         "EXCEL",
-                            "fileName":         os.path.join('output', '##NAME##.xlsx'),
+                            "fileName":         os.path.join('output', '##NAME##.##TYPE##'),
                             "sorting":          { "time": QtCore.Qt.DescendingOrder },
                             "locales":          "EN",
                             "shortLabels":      True,

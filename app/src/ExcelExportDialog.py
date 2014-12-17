@@ -14,13 +14,13 @@ import exportFunctions as e
 import helpers as f
 
 # EXPORT UI
-import export
+import excelExport
 
-class ExportDialog(QtGui.QDialog):
+class ExcelExportDialog(QtGui.QDialog):
     def __init__(self, mainWin):
         QtGui.QDialog.__init__(self, mainWin)
         self.main = mainWin
-        self.ui = export.Ui_exportDialog()
+        self.ui = excelExport.Ui_excelExportDialog()
         self.ui.setupUi(self)
 
         self.connect(self.ui.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
@@ -86,7 +86,7 @@ class ExportDialog(QtGui.QDialog):
 
 
         # FILE NAME
-        self.ui.fileEdit.setText(options["fileName"].replace("##NAME##", self.metaData["_name"]))
+        self.ui.fileEdit.setText(options["fileName"].replace("##NAME##", self.metaData["_name"]).replace("##TYPE##", "xlsx"))
         # TAB NAME
         if "sheetName" in options:
             self.ui.sheetName.setText(options["sheetName"].replace("##NAME##", self.metaData["_name"]))
@@ -131,7 +131,7 @@ class ExportDialog(QtGui.QDialog):
 
     def _fileSelect(self):
         fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", self.ui.fileEdit.text(),
-                                "Excel (*.xls)", options = QtGui.QFileDialog.DontConfirmOverwrite)
+                                "Excel (*.xlsx)", options = QtGui.QFileDialog.DontConfirmOverwrite)
         if fileName != "":
             self.ui.fileEdit.setText(fileName)
 
