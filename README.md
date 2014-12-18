@@ -12,7 +12,7 @@ In addition presets can be created, stored and executed which helps to automize 
 * [openpyxl](http://openpyxl.readthedocs.org/) | Writing Excel Files (in this repo)
 * [pandas](http://pandas.pydata.org/) | Writing Stata Files
 
-It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1). 
+It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1) or [WinPython](https://winpython.github.io/) (2.7.9.1).
 
 #### Submodule Libraries
 * [simplejson](http://simplejson.readthedocs.org/) | Writing/Reading JSON
