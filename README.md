@@ -1,6 +1,6 @@
 ## eurostat bulk exporter
 ### About
-This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/). The downloaded datasets can be filtered, sorted and exported to Excel files. Other export file types will follow (CSV, STATA datasets, R datasets, ...). 
+This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/). The downloaded datasets can be filtered, sorted and exported as Excel and Stata files. Other export file types will follow (CSV, R datasets, ...). 
 In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports. It also allows the automatic creation of charts in Excel files.
 
 #### Screenshot
@@ -10,6 +10,7 @@ In addition presets can be created, stored and executed which helps to automize 
 * [Python](https://www.python.org/) > 2.6  (should also work with version 3) | Programming Language
 * [PyQt](http://www.riverbankcomputing.com/software/pyqt) 4 | GUI 
 * [openpyxl](http://openpyxl.readthedocs.org/) | Writing Excel Files (in this repo)
+* [pandas](http://pandas.pydata.org/) | Writing Stata Files
 
 It's working fine with [Portable Python](http://portablepython.com/) (2.7.6.1). 
 

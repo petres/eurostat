@@ -76,7 +76,7 @@ def exportStata(options, progressControl=None):
             cDim.append(name)
         elif format == "long":
             rDim.append(name)
-        
+
             code = structure[name]["code"]
             if code == "short":
                 cols.append(name)
@@ -86,21 +86,16 @@ def exportStata(options, progressControl=None):
                 cols.append(name)
                 cols.append(name + "Label")
 
-
-
     rIterList = []
     cIterList = []
-    
+
     for i in rDim:
         rIterList.append(selection[i])
-
 
     for i in cDim:
         cIterList.append(selection[i])
 
-
-
-    #print "cols", len(cols)
+    # print "cols", len(cols)
 
     colValueNames = []
     if len(cDim) == 0:
@@ -121,8 +116,6 @@ def exportStata(options, progressControl=None):
             elif code == "both":
                 values.append(r[i])
                 values.append(findInDict(c, r[i]))
-
-
 
         entry = False
         for c in itertools.product(*cIterList):
@@ -148,16 +141,15 @@ def exportStata(options, progressControl=None):
 
     df = pd.DataFrame(lines, columns=cols + colValueNames)
 
-    timeFormat = 'ty'
+    convert_dates = None
     for colName in cols:
         if colName == "time":
+            convert_dates = {"time": 'ty'}
             if "Q" in df.loc[0, colName]:
-                timeFormat = 'tq'
-            elif "M" in df.loc[0, colName]:
-                timeFormat = 'tm'
+                convert_dates = {"time": 'tq'}
             df[colName] = pd.DatetimeIndex(df[colName])
             #df['timeTest2'] = pd.DatetimeIndex(df[colName])
-            #df[colName] = pd.to_datetime(df[colName]) 
+            #df[colName] = pd.to_datetime(df[colName])
             #df[colName] = df[colName].to_period()
         else:
             df[colName] = df[colName].astype("category")
@@ -170,7 +162,7 @@ def exportStata(options, progressControl=None):
 
     #info = getFileInfo(options["name"])
     #dataset_label=options["name"] + " LU: " + str(info["updatedDate"])
-    df.to_stata(options["fileName"], write_index=False, convert_dates={"time": timeFormat} )
+    df.to_stata(options["fileName"], write_index=False, convert_dates=convert_dates)
     #df.to_stata(options["fileName"], write_index=False)
 
 

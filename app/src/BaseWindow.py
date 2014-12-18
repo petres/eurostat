@@ -48,6 +48,8 @@ class BaseWindow(QtGui.QDialog):
         self.connect(self.ui.removeButton, QtCore.SIGNAL("clicked()"), self._removeDBfile)
         self.connect(self.ui.browseButton, QtCore.SIGNAL("clicked()"), self._browse)
 
+        self.connect(self.ui.databaseTable, QtCore.SIGNAL('cellDoubleClicked(int, int)'), self._loadDB)
+
         self.connect(self.ui.presetButton, QtCore.SIGNAL("clicked()"), self._loadPreset)
 
         self.connect(self.ui.addLineEdit, QtCore.SIGNAL("textChanged(const QString &)"), self._addLineEditChanged)
@@ -135,7 +137,7 @@ class BaseWindow(QtGui.QDialog):
                 #---checkbox select all---
                 boxall = QtGui.QTableWidgetItem()  # make item for select-all-checkbox
                 boxall.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                boxall.setCheckState(QtCore.Qt.Unchecked)
+                boxall.setCheckState(QtCore.Qt.Checked)
 
                 #---insert "select all" items---
                 tableWidget.setItem(0, 1, QtGui.QTableWidgetItem("Select All"))
