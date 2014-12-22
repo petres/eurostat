@@ -332,6 +332,11 @@ class BaseWindow(QtGui.QDialog):
         #self.worker.finishedTrigger.connect(lambda: self.setSelectedCats(options))
         self.updateTab(self.worker.metaData)
         self.setSelectedCats(options)
+
+        if options['fileType'] == 'EXCEL':
+            self._initExcelExport()
+        elif options['fileType'] == 'STATA':
+            self._initStataExport()
         # f.runPreset(fileName)
 
     def getSelectedCats(self):

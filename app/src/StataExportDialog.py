@@ -40,8 +40,8 @@ class StataExportDialog(QtGui.QDialog):
         self.ui.timeComboBox.setCurrentIndex(self.ui.timeComboBox.findText(options["presetTime"]))
 
         self.ui.tableWidget.setRowCount(len(metaData["_cols"]))
-        self.ui.tableWidget.setColumnCount(3)
-        self.ui.tableWidget.setHorizontalHeaderLabels(["Dimension", "Format", "Code"])
+        self.ui.tableWidget.setColumnCount(4)
+        self.ui.tableWidget.setHorizontalHeaderLabels(["Dimension", "Format", "Code",  "Encoding"])
         self.ui.tableWidget.verticalHeader().setVisible(False)
         self.ui.tableWidget.setAlternatingRowColors(True)
         self.ui.tableWidget.horizontalHeader().setStretchLastSection(True)
@@ -52,7 +52,6 @@ class StataExportDialog(QtGui.QDialog):
         self.combos = {}
 
         for i, name in enumerate(metaData["_cols"]):
-            print i, name
             self.ui.tableWidget.setItem(i, 0, QtGui.QTableWidgetItem(name))
             self.combos[name] = {}
 
@@ -60,12 +59,46 @@ class StataExportDialog(QtGui.QDialog):
             strCombo.addItems(strItems)
             self.ui.tableWidget.setCellWidget(i, 1, strCombo)
             self.combos[name]["str"] = strCombo
-            self.connect(strCombo, QtCore.SIGNAL("currentIndexChanged(QString)"), self._strChanged)
+            
 
             codeCombo = QtGui.QComboBox()
             codeCombo.addItems(codeItems)
             self.ui.tableWidget.setCellWidget(i, 2, codeCombo)
             self.combos[name]["code"] = codeCombo
+
+
+            encodingBox = QtGui.QCheckBox()
+            encodingBox.setCheckState(QtCore.Qt.Unchecked)
+            if name == 'time':
+                encodingBox.setText("as stata time")
+            else:
+                encodingBox.setText("as factor")
+            self.ui.tableWidget.setCellWidget(i, 3, encodingBox)
+            self.combos[name]["encoding"] = encodingBox
+
+
+            self.connect(strCombo, QtCore.SIGNAL("currentIndexChanged(QString)"), self._strChanged)
+        
+            try:
+                strCombo.setCurrentIndex(strCombo.findText(options["structure"][name]["format"]))
+            except:
+                pass
+
+
+            try:
+                codeCombo.setCurrentIndex(codeCombo.findText(options["structure"][name]["code"]))
+            except:
+                pass
+
+
+            try:
+                if options["structure"][name]["encode"]:
+                    encodingBox.setCheckState(QtCore.Qt.Checked)
+                else:
+                    encodingBox.setCheckState(QtCore.Qt.Unchecked)
+            except:
+                pass
+
 
         # FILE NAME
         self.ui.fileEdit.setText(options["fileName"].replace(
@@ -78,8 +111,10 @@ class StataExportDialog(QtGui.QDialog):
                 selected = sender.currentText()
                 if selected == "wide":
                     self.combos[name]["code"].setEnabled(False)
+                    self.combos[name]["encoding"].setEnabled(False)
                 elif selected == "long":
                     self.combos[name]["code"].setEnabled(True)
+                    self.combos[name]["encoding"].setEnabled(True)
 
     def _fileSelect(self):
         fileName = QtGui.QFileDialog.getSaveFileName(self, "Choose File", self.ui.fileEdit.text(),
@@ -103,6 +138,7 @@ class StataExportDialog(QtGui.QDialog):
             structure[name] = {}
             structure[name]["format"] = str(self.combos[name]["str"].currentText())
             structure[name]["code"] = str(self.combos[name]["code"].currentText())
+            structure[name]["encode"] = (self.combos[name]["encoding"].checkState() == QtCore.Qt.Checked)
 
         self.options = {"name":         self.metaData["_name"],
                         "selection":    self.options["selection"],

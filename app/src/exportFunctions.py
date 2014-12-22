@@ -143,16 +143,17 @@ def exportStata(options, progressControl=None):
 
     convert_dates = None
     for colName in cols:
-        if colName == "time":
-            convert_dates = {"time": 'ty'}
-            if "Q" in df.loc[0, colName]:
-                convert_dates = {"time": 'tq'}
-            df[colName] = pd.DatetimeIndex(df[colName])
-            #df['timeTest2'] = pd.DatetimeIndex(df[colName])
-            #df[colName] = pd.to_datetime(df[colName])
-            #df[colName] = df[colName].to_period()
-        else:
-            df[colName] = df[colName].astype("category")
+        if colName in structure and "encode" in structure[colName] and structure[colName]["encode"]:
+            if colName == "time":
+                convert_dates = {"time": 'ty'}
+                if "Q" in df.loc[0, colName]:
+                    convert_dates = {"time": 'tq'}
+                df[colName] = pd.DatetimeIndex(df[colName])
+                #df['timeTest2'] = pd.DatetimeIndex(df[colName])
+                #df[colName] = pd.to_datetime(df[colName])
+                #df[colName] = df[colName].to_period()
+            else:
+                df[colName] = df[colName].astype("category")
 
     for colName in colValueNames:
         df[colName] = df[colName].astype("float64")

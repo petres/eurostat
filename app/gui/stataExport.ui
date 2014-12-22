@@ -36,7 +36,7 @@
           <bool>true</bool>
          </property>
          <attribute name="horizontalHeaderDefaultSectionSize">
-          <number>160</number>
+          <number>126</number>
          </attribute>
          <attribute name="horizontalHeaderMinimumSectionSize">
           <number>25</number>
@@ -55,6 +55,11 @@
            <string>New Row</string>
           </property>
          </row>
+         <column>
+          <property name="text">
+           <string>New Column</string>
+          </property>
+         </column>
          <column>
           <property name="text">
            <string>New Column</string>
