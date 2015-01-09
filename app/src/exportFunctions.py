@@ -19,7 +19,7 @@ import itertools
 # SIMPLEJSON
 import simplejson as sj
 
-from helpers import Settings, Worker, log, findInDict, getFileInfo
+from helpers import Settings, Worker, log, findInDict, getFileInfo, loadTsvFile
 
 import copy
 
@@ -61,7 +61,7 @@ def exportStata(options, progressControl=None):
     if progressControl is not None:
         progressControl.setStep(0)
 
-    data = _prepareData(options["name"], selection)
+    data = _prepareData(options["name"], selection, timeOption = options["presetTime"])
 
     if progressControl is not None:
         progressControl.setStep(1)
@@ -170,6 +170,21 @@ def exportStata(options, progressControl=None):
 def exportExcel(options, progressControl=None):
     structure = options["structure"]
     selection = options["selection"]
+
+    if options["presetTime"] == "Include Newer Periods":
+        #log("  -- Option: Include Newer Periods")
+        metaData = loadTsvFile(options["name"])
+        
+        lastTime = max(selection["time"])
+
+        #log("      last used time is: " + lastTime)
+
+        for t in metaData["time"]:
+            if t > lastTime:
+                #log("       -> adding " + t)
+                selection["time"].append(t)
+
+    _sortingBeforeExport(selection, options["sorting"])
 
     existingSheets = []
 

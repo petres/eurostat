@@ -520,12 +520,12 @@ def checkDictFile(fileName):
 
     dictFileName = fileName + ".dic"
 
-    log("check for dictionary " + dictFileName)
+    #log("check for dictionary " + dictFileName)
     if dictFileName in os.listdir(Settings.dictPath):
-        log("dictionary found...OK")
+        #log("dictionary found...OK")
         return True
     else:
-        log("dictionary NOT found ... start download attempt")
+        #log("dictionary NOT found ... start download attempt")
         return downloadDictFile(dictFileName)
 
 
