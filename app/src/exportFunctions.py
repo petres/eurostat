@@ -61,7 +61,7 @@ def exportStata(options, progressControl=None):
     if progressControl is not None:
         progressControl.setStep(0)
 
-    data = _prepareData(options["name"], selection, timeOption = options["presetTime"])
+    data = _prepareData(options["name"], selection)
 
     if progressControl is not None:
         progressControl.setStep(1)
@@ -174,7 +174,7 @@ def exportExcel(options, progressControl=None):
     if options["presetTime"] == "Include Newer Periods":
         #log("  -- Option: Include Newer Periods")
         metaData = loadTsvFile(options["name"])
-        
+
         lastTime = max(selection["time"])
 
         #log("      last used time is: " + lastTime)
