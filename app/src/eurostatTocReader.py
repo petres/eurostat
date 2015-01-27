@@ -58,6 +58,8 @@ class TocWorker(Worker):
 
         self.toc = output
 
+        self.setStep(3)
+
 
 def outputJson(info, i = 0):
     if type(info) is list:

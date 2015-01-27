@@ -51,6 +51,7 @@ def main():
         runPresetsFromCL(args.presets)
         exit()
 
+    #sys.argv["name"] = "Eurostat Exporter"
     app = QtGui.QApplication(sys.argv)
     app.setApplicationName(Settings.applicationName)
 

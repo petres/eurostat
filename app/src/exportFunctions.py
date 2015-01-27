@@ -139,6 +139,7 @@ def exportStata(options, progressControl=None):
         if entry:
             lines.append(values)
 
+
     df = pd.DataFrame(lines, columns=cols + colValueNames)
 
     convert_dates = None
@@ -350,7 +351,7 @@ def _prepareData(name, selection=None):
         tsvReader = csv.reader(tsvFile, delimiter='\t')
         for i, row in enumerate(tsvReader):
             if i == 0:
-                data["cols"] = (row[0].split(","))[:-1] + ["geo", "time"]
+                data["cols"] = row[0].split("\\")[0].split(",") + ["time"]
                 for j in range(1, len(row)):  # starts at 1 because at [0] are categories
                     time.append(row[j].strip())
             else:

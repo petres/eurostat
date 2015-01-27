@@ -31,6 +31,8 @@ class BaseWindow(QtGui.QDialog):
         super(QtGui.QDialog, self).__init__(parent)
         self.ui = base.Ui_base()
         self.ui.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon(Settings.iconFile))
+        self.setWindowTitle(Settings.applicationName)
 
         # init variables
         self.ignoreItemChanges = False
