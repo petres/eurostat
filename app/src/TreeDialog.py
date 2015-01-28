@@ -25,7 +25,8 @@ class TreeDialog(QtGui.QDialog):
     branchFont.setWeight(50)
 
     def __init__(self, mainWin = None):
-        QtGui.QDialog.__init__(self, mainWin)
+        print(mainWin)
+        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Tool)
         self.main = mainWin
         self.ui = tree.Ui_TreeDialog()
         self.ui.setupUi(self)

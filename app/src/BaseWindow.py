@@ -28,7 +28,7 @@ from datetime import datetime, timedelta
 class BaseWindow(QtGui.QDialog):
 
     def __init__(self, parent=None):
-        super(QtGui.QDialog, self).__init__(parent)
+        super(QtGui.QDialog, self).__init__(parent, QtCore.Qt.Window)
         self.ui = base.Ui_base()
         self.ui.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(Settings.iconFile))
@@ -296,7 +296,7 @@ class BaseWindow(QtGui.QDialog):
 
         #---show export option dialog---
         dialog = ExcelExportDialog(self)
-        dialog.init(self.metaData, self.options)
+        dialog.init(self.metaData, dict(self.options))
         dialog.exec_()
 
     def _initStataExport(self):
@@ -311,7 +311,7 @@ class BaseWindow(QtGui.QDialog):
 
         #---show export option dialog---
         dialog = StataExportDialog(self)
-        dialog.init(self.metaData, self.options)
+        dialog.init(self.metaData, dict(self.options))
         dialog.exec_()
 
     def _browse(self):

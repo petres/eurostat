@@ -343,7 +343,7 @@ def _prepareTable(data, options, fixed={}):
 
 
 def _prepareData(name, selection=None):
-    time = []
+    colDimValues = []
     data = {"data": {}, "cols": [], "flags": []}
 
     tsvFileName = os.path.join(Settings.dataPath, name + '.tsv')
@@ -351,30 +351,32 @@ def _prepareData(name, selection=None):
         tsvReader = csv.reader(tsvFile, delimiter='\t')
         for i, row in enumerate(tsvReader):
             if i == 0:
-                data["cols"] = row[0].split("\\")[0].split(",") + ["time"]
+                tmp = row[0].split("\\")
+                colDim = tmp[1]
+                data["cols"] = tmp[0].split(",") + [colDim]
                 for j in range(1, len(row)):  # starts at 1 because at [0] are categories
-                    time.append(row[j].strip())
+                    colDimValues.append(row[j].strip())
             else:
                 inSelection = True
                 keyList = []
                 tmp = row[0].split(",")                     # row eg. CPI00_EUR,A_B,B1G,BG
 
-                for k, tt in enumerate(tmp):
+                for k, rowDimValue in enumerate(tmp):
                     # FILTERING
-                    if (selection is not None) and (tt.strip() not in selection[data["cols"][k]]):
+                    if (selection is not None) and (rowDimValue.strip() not in selection[data["cols"][k]]):
                         inSelection = False
                         break
-                    keyList.append(tt.strip())
+                    keyList.append(rowDimValue.strip())
 
                 if not inSelection:
                     continue
 
                 for j in range(1, len(row)):  # starts at 1 because at [0] are categories
                     # FILTERING
-                    if (selection is not None) and (time[j - 1] not in selection["time"]):
+                    if (selection is not None) and (colDimValues[j - 1] not in selection[colDim]):
                         continue
 
-                    key = tuple(keyList + [time[j - 1]])
+                    key = tuple(keyList + [colDimValues[j - 1]])
                     entry = row[j].strip()
 
                     flag = None

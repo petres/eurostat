@@ -322,7 +322,6 @@ def loadTsvFile(name):
     metaData = {}
     metaData["_name"]   = name
     metaData["_cols"]   = []
-    metaData["time"]    = []
     #metaData["geo"]     = []
     #checkDictFile("geo")
 
@@ -339,33 +338,30 @@ def loadTsvFile(name):
 
         for i, row in enumerate(tsvReader):
             if i == 0:
-                #---get dic-TITLES---
-                tmp = (row[0].split("\\"))[0]  # without the last "\time"
-                metaData["_cols"] = tmp.split(",")
-                #log("cols: " + str(metaData["_cols"]))
+                tmp = row[0].split("\\")  # sepearating row and col dimensions
+
+                rowDims = tmp[0].split(",")
+                colDim = tmp[1]
+        
+                metaData["_cols"] = [colDim] + rowDims
 
                 #---check DICTIONARY and append 2D-array for Category-list
                 for tt in metaData["_cols"]:
                     checkDictFile(tt)           #check dictionary of each title
                     metaData[tt] = []
 
-                #---get TIME array from row---
+                #---get col entries ---
                 for j in range(1, len(row)):  # starts at 1 because at [0] are categories
-                    metaData["time"].append(row[j].strip())
+                    metaData[colDim].append(row[j].strip())
 
             else:
-                #---get Categories and GEO
+                #---get row entries
                 tmp = row[0].split(",")                     # row eg. CPI00_EUR,A_B,B1G,BG
-                for i, tt in enumerate(metaData["_cols"]):  # for each title check if the category of this row is in the cat_list
-                    colName = metaData["_cols"][i]
+                for i, tt in enumerate(rowDims):  # for each title check if the category of this row is in the cat_list
+                    colName = rowDims[i]
                     if tmp[i].strip() not in metaData[colName]:           # if not then append to cat_list in the row of the respective title
                         metaData[colName].append(tmp[i].strip())
 
-                #if tmp[-1].strip() not in metaData["geo"]:    # fill GEO List with the GEO Info (is always last)
-                #    metaData["geo"].append(tmp[-1].strip())
-
-    metaData["_cols"].insert(0, "time")
-    #metaData["_cols"].append("geo")
 
     return metaData
 

@@ -18,7 +18,7 @@ import excelExport
 
 class ExcelExportDialog(QtGui.QDialog):
     def __init__(self, mainWin):
-        QtGui.QDialog.__init__(self, mainWin)
+        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Tool)
         self.main = mainWin
         self.ui = excelExport.Ui_excelExportDialog()
         self.ui.setupUi(self)
@@ -210,8 +210,8 @@ class ExcelExportDialog(QtGui.QDialog):
 
 
     def _doExport(self):
-        self.main.options = self._updateAndReturnOptions()
-        self.worker = e.ExportWorker(self.main.options, parent = self)
+        #self.main.options = self._updateAndReturnOptions()
+        self.worker = e.ExportWorker(self._updateAndReturnOptions(), parent = self)
 
         self.worker.startWork()
         #self.worker.finishedTrigger.connect(self.close)
