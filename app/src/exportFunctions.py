@@ -100,9 +100,13 @@ def exportStata(options, progressControl=None):
     colValueNames = []
     if len(cDim) == 0:
         colValueNames += ["value"]
+        if options["exportFlags"]:
+            colValueNames += ["flag"]
     else:
         for c in itertools.product(*cIterList):
             colValueNames += ["value_" + "_".join(c)]
+            if options["exportFlags"]:
+                colValueNames += ["flag_" + "_".join(c)]
 
     lines = []
     for r in itertools.product(*rIterList):
@@ -132,9 +136,13 @@ def exportStata(options, progressControl=None):
             key = tuple(keyList)
             if key in data["data"]:
                 values.append(data["data"][key]["value"])
+                if options["exportFlags"]:
+                    values.append(data["data"][key]["flag"])
                 entry = True
             else:
                 values.append(None)
+                if options["exportFlags"]:
+                    values.append(None)
 
         if entry:
             lines.append(values)
@@ -157,7 +165,9 @@ def exportStata(options, progressControl=None):
                 df[colName] = df[colName].astype("category")
 
     for colName in colValueNames:
-        df[colName] = df[colName].astype("float64")
+        if colName.startswith('value'):
+            #log("convert col to float " + colName)
+            df[colName] = df[colName].astype("float64")
 
     if progressControl is not None:
         progressControl.setStep(2)

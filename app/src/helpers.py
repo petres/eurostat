@@ -83,6 +83,7 @@ class Settings():
                             "overwrite":        "Sheet",
                             "codeLabels":       True,
                             "longLabels":       False,
+                            "exportFlags":      False,
                             "style":            "Basic",
                             "presetTime":       "Include Newer Periods",
                             "emptyCellSign":    "",

@@ -29,7 +29,7 @@
       <attribute name="title">
        <string>Structure</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
         <widget class="QTableWidget" name="tableWidget">
          <property name="alternatingRowColors">
@@ -75,6 +75,13 @@
            <string>New Column</string>
           </property>
          </column>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="flagCheckBox">
+         <property name="text">
+          <string>Export Flags (extra column for each value column)</string>
+         </property>
         </widget>
        </item>
       </layout>

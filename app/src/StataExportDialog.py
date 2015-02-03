@@ -104,6 +104,12 @@ class StataExportDialog(QtGui.QDialog):
         self.ui.fileEdit.setText(options["fileName"].replace(
             "##NAME##", self.metaData["_name"]).replace("##TYPE##", "dta"))
 
+        # FLAG EXPORT
+        if options["exportFlags"]:
+            self.ui.flagCheckBox.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.ui.flagCheckBox.setCheckState(QtCore.Qt.Unchecked)
+
     def _strChanged(self):
         sender = self.sender()
         for name in self.combos:
@@ -146,6 +152,11 @@ class StataExportDialog(QtGui.QDialog):
                         "fileType":     "STATA",
                         "fileName":     str(self.ui.fileEdit.text()),
                         "presetTime":   str(self.ui.timeComboBox.currentText())}
+
+        if self.ui.flagCheckBox.checkState() == QtCore.Qt.Checked:
+            self.options["exportFlags"] = True
+        else:
+            self.options["exportFlags"] = False
 
         return self.options
 
