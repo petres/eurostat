@@ -54,7 +54,7 @@ class Settings():
 
     dataInfoFile        = os.path.join('data', 'info.json')
 
-    applicationName     = "Eurostat Exporter"
+    applicationName     = "Data Exporter"
     iconFile            = "app/gui/icon.png"
 
     #dictURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
