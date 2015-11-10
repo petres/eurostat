@@ -57,15 +57,20 @@ class Settings():
     applicationName     = "Data Exporter"
     iconFile            = "app/gui/icon.png"
 
-    #dictURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&downfile=dic%2Fen%2F'
-    dictURL             = 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2F'
-    #bulkURL             = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=data%2F'
-    bulkURL             = 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2F'
-    #eurostatURL         = 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data'
-    #eurostatURLchar     = 'http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?dir=data&sort=1&sort=2&start=' #+'n' is the list of files start with "n"
-    eurostatURLchar     = 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?dir=data&sort=1&sort=2&start=' #+'n' is the list of files start with "n"
+    sources             = {
+        "eurostat": {
+            "type"                : 'EUROSTAT-BULK',
+            "dictURL"             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2F',
+            "bulkURL"             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2F',
+            "emptyCellSign"       : ':', 
+            'URLchar'             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?dir=data&sort=1&sort=2&start='
+        },
+        "oecd": {
+            "type"                : 'SDMX-JSON',
+            "metaData"            : 'http://stats.oecd.org/SDMX-JSON/'
+        }
+    }
 
-    eurostatEmptyCellSign = ":"
 
     presetFile          = os.path.join('presets', '##NAME##.preset')
 
@@ -201,19 +206,28 @@ class DownloadAndExtractDbWorker(Worker):
     title = "Get Database ... "
     steps = ["Download File", "Extracting", "Get File Info"]
 
-    def __init__(self, name, parent = None):
+    def __init__(self, source, name, parent = None):
         Worker.__init__(self, parent)
         self.name = name
+        self.source = source
 
 
     def work(self):
         self.setStep(0)
         currentTime = datetime.now()
-        downloadTsvGzFile(self.name)
-        self.setStep(1)
-        extractTsvGzFile(self.name)
-        self.setStep(2)
-        addFileInfo(self.name, currentTime)
+        if self.source == "eurostat":
+            downloadTsvGzFile(self.name)
+            self.setStep(1)
+            extractTsvGzFile(self.name)
+            dsInfo = getFileInfoFromEurostat(self.name)
+            dsInfo["extractedDate"] = currentTime
+            dsInfo["name"] = self.name
+            dsInfo["source"] = "eurostat"
+            self.setStep(2)
+        else:
+            raise Exception("not imp")
+
+        addFileInfo(dsInfo)
 
 
 class LoadDbWorker(Worker):
@@ -246,7 +260,8 @@ def downloadTsvGzFile(name):
 
     try:
         #---get gz file from eurostat page---
-        fileURL = Settings.bulkURL + gzFileName
+        fileURL = Settings.sources["eurostat"]["bulkURL"] + gzFileName
+        log(fileURL)
         response = urlopen(fileURL)
 
         with open(fGzFileName, 'wb') as outfile:
@@ -259,7 +274,8 @@ def downloadTsvGzFile(name):
         if str(magicNumber.encode('hex')) != "1f8b":
             raise Exception("Wrong file format")
 
-    except Exception as e:   # delete the remains of partdownloads - if they exist
+    except Exception as e:   
+        # delete the remains of partdownloads - if they exist
         if os.path.isfile(fGzFileName):
             os.remove(fGzFileName)
 
@@ -387,47 +403,55 @@ def getFileInfoJson():
         saveFileInfoJson()
 
     with open(Settings.dataInfoFile, 'r') as infoFile:
-        info = sj.loads(infoFile.read())
+        wInfo = sj.loads(infoFile.read())
 
-    for entry in info:
-        if "updatedDate" in info[entry]:
-            info[entry]["updatedDate"] = datetime.strptime(info[entry]["updatedDate"], Settings.dateFormat)
-        if "extractedDate" in info[entry]:
-            info[entry]["extractedDate"] = datetime.strptime(info[entry]["extractedDate"], Settings.dateFormat)
-        if "lastCheckedDate" in info[entry]:
-            info[entry]["lastCheckedDate"] = datetime.strptime(info[entry]["lastCheckedDate"], Settings.dateFormat)
+    for source in wInfo:
+        info = wInfo[source]
+        for entry in info:
+            if "updatedDate" in info[entry]:
+                info[entry]["updatedDate"] = datetime.strptime(info[entry]["updatedDate"], Settings.dateFormat)
+            if "extractedDate" in info[entry]:
+                info[entry]["extractedDate"] = datetime.strptime(info[entry]["extractedDate"], Settings.dateFormat)
+            if "lastCheckedDate" in info[entry]:
+                info[entry]["lastCheckedDate"] = datetime.strptime(info[entry]["lastCheckedDate"], Settings.dateFormat)
 
-    fileInfo = info
+    fileInfo = wInfo
 
     return fileInfo
 
 
 def saveFileInfoJson():
-    wInfo = copy.deepcopy(fileInfo)
-    for entry in wInfo:
-        if "updatedDate" in wInfo[entry]:
-            wInfo[entry]["updatedDate"] = wInfo[entry]["updatedDate"].strftime(Settings.dateFormat)
-        if "extractedDate" in wInfo[entry]:
-            wInfo[entry]["extractedDate"] = wInfo[entry]["extractedDate"].strftime(Settings.dateFormat)
-        if "lastCheckedDate" in wInfo[entry]:
-            wInfo[entry]["lastCheckedDate"] = wInfo[entry]["lastCheckedDate"].strftime(Settings.dateFormat)
+    info = copy.deepcopy(fileInfo)
+    log(info)
+    for source in info:
+        wInfo = info[source]
+        log(wInfo)
+        for entry in wInfo:
+            if "updatedDate" in wInfo[entry]:
+                wInfo[entry]["updatedDate"] = wInfo[entry]["updatedDate"].strftime(Settings.dateFormat)
+            if "extractedDate" in wInfo[entry]:
+                wInfo[entry]["extractedDate"] = wInfo[entry]["extractedDate"].strftime(Settings.dateFormat)
+            if "lastCheckedDate" in wInfo[entry]:
+                wInfo[entry]["lastCheckedDate"] = wInfo[entry]["lastCheckedDate"].strftime(Settings.dateFormat)
 
     with open(Settings.dataInfoFile, 'w') as infoFile:
-        infoFile.write(sj.dumps(wInfo))
+        infoFile.write(sj.dumps(info))
         infoFile.close()
 
 
-def getFileInfo(name):
+def getFileInfo(source, name):
     info = getFileInfoJson()
-    if name in info:
-        return info[name]
+    if source in info:
+        if name in info[source]:
+            return info[source][name]
 
 
-def delFileInfo(name):
+def delFileInfo(source, name):
     info = getFileInfoJson()
 
-    if name in info:
-        del info[name]
+    if source in info:
+        if name in info[source]:
+            del info[source][name]
 
     saveFileInfoJson()
 
@@ -437,7 +461,7 @@ def getFileInfoFromEurostat(name):
     eInfo = {}
     eInfo["lastCheckedDate"] = datetime.now()
 
-    fileURL = Settings.eurostatURLchar + name[0]  # the url is sorted e.g. it ends with "a" for a List of files that start with "a"
+    fileURL = Settings.sources["eurostat"]["URLchar"] + name[0]  # the url is sorted e.g. it ends with "a" for a List of files that start with "a"
     response = urlopen(fileURL)
 
     for line in response:
@@ -459,13 +483,17 @@ def getFileInfoFromEurostat(name):
     return eInfo
 
 
-def addFileInfo(name, extractedDate):
-    eurostatInfo = getFileInfoFromEurostat(name)
+def addFileInfo(dsInfo):
+    base = getFileInfoJson()
 
-    info = getFileInfoJson()
-    info[name] = {"size": eurostatInfo["size"], "updatedDate": eurostatInfo["updatedDate"],
-                "extractedDate": extractedDate, "lastCheckedDate": eurostatInfo["lastCheckedDate"] }
+    try:
+        info = base[dsInfo["source"]]
+    except KeyError:
+        base[dsInfo["source"]] = {}
+        info = base[dsInfo["source"]]
 
+    info[dsInfo["name"]] = {"size": dsInfo["size"], "updatedDate": dsInfo["updatedDate"],
+                "extractedDate": dsInfo["extractedDate"], "lastCheckedDate": dsInfo["lastCheckedDate"] }
 
     saveFileInfoJson()
 

@@ -64,25 +64,35 @@ class BaseWindow(QtGui.QDialog):
 
     def updateDBList(self):
         #---read filenames in data-directory ---
-        tsvNames = f.getFileList()
+        #tsvNames = f.getFileList()
+        dsList = f.getFileInfoJson()
+
+        comb = []
+
+        for source in dsList:
+            for name in dsList[source]:
+                comb.append((source, name))
 
         #---addjust List ----
-        self.ui.databaseTable.setRowCount(len(tsvNames))
+        self.ui.databaseTable.setRowCount(len(comb))
 
-        for i, name in enumerate(tsvNames):
+        for i, (source, name) in enumerate(comb):
             self.ui.databaseTable.setItem(i, 0, QtGui.QTableWidgetItem(name))
-            info = f.getFileInfo(name)
-            self.ui.databaseTable.setItem(i, 1, QtGui.QTableWidgetItem(str(info["updatedDate"])))
-            self.ui.databaseTable.setItem(i, 2, QtGui.QTableWidgetItem(info["size"]))
+            self.ui.databaseTable.setItem(i, 1, QtGui.QTableWidgetItem(source))
+            info = f.getFileInfo(source = source, name = name)
+            #f.log(info)
+            self.ui.databaseTable.setItem(i, 2, QtGui.QTableWidgetItem(str(info["updatedDate"])))
+            self.ui.databaseTable.setItem(i, 3, QtGui.QTableWidgetItem(info["size"]))
 
             newerVersionAvailable = False
             if "newerVersionAvailable" in info and info["newerVersionAvailable"]:
                 newerVersionAvailable = True
             else:
-                if info["lastCheckedDate"] < (datetime.now() - timedelta(minutes=60)):
-                    newInfo = f.getFileInfoFromEurostat(name)
-                    if newInfo["updatedDate"] > info["updatedDate"]:
-                        newerVersionAvailable = True
+                if source == "eurostat":
+                    if info["lastCheckedDate"] < (datetime.now() - timedelta(minutes=60)):
+                        newInfo = f.getFileInfoFromEurostat(name)
+                        if newInfo["updatedDate"] > info["updatedDate"]:
+                            newerVersionAvailable = True
 
             if newerVersionAvailable:
                 for j in range(3):
@@ -256,7 +266,7 @@ class BaseWindow(QtGui.QDialog):
         self._downloadDB(fileName)
 
     def _downloadDB(self, name):
-        self.worker = f.DownloadAndExtractDbWorker(name, parent=self)
+        self.worker = f.DownloadAndExtractDbWorker("eurostat", name, parent=self)
         self.worker.startWork()
 
         # self.worker.finishedTrigger.connect(self.updateDBList)
