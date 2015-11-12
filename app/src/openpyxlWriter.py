@@ -82,12 +82,12 @@ class Writer():
         self.write((2, 0), "Preset:")
         self.write((2, 1), f.getStringOfPreset(options))
 
-        info = f.getFileInfo(options["name"])
-        self.write((3, 0), "Last updated:")
-        self.write((3, 1), info["updatedDate"])
+        #info = f.getFileInfo(options["name"])
+        #self.write((3, 0), "Last updated:")
+        #self.write((3, 1), info["updatedDate"])
 
-        self.write((4, 0), "Extracted on:")
-        self.write((4, 1), info["extractedDate"])
+        #self.write((4, 0), "Extracted on:")
+        #self.write((4, 1), info["extractedDate"])
 
 
     def write(self, coords, value, style = None):
@@ -110,13 +110,15 @@ class Writer():
             else:
                 self.write((initialOffset[0] + tableOffsetRow, 0), label["name"])
                 self.write((initialOffset[0] + tableOffsetRow, 1), label["value"])
-                self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(label["name"], label["value"]))
+                self.write((initialOffset[0] + tableOffsetRow, 2), label["value"])
+                #self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(label["name"], label["value"]))
                 tableOffsetRow += 1
 
         for crit in table["structure"]["fixed"]:
             self.write((initialOffset[0] + tableOffsetRow, 0), crit)
             self.write((initialOffset[0] + tableOffsetRow, 1), table["structure"]["fixed"][crit])
-            self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(crit, table["structure"]["fixed"][crit]))
+            self.write((initialOffset[0] + tableOffsetRow, 2), table["structure"]["fixed"][crit])
+            #self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(crit, table["structure"]["fixed"][crit]))
             tableOffsetRow += 1
 
         tableOffset = (tableOffsetRow + 2, 0)

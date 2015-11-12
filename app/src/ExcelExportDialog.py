@@ -58,7 +58,7 @@ class ExcelExportDialog(QtGui.QDialog):
 
         if "time" in metaData["_cols"]:
             self.ui.indexCheckBox.setEnabled(True)
-            self.ui.indexCombo.addItems(metaData["time"][::-1])
+            self.ui.indexCombo.addItems(metaData["time"].values()[::-1])
 
         if "index" in options and options["index"] is not None:
             self.ui.indexCheckBox.setChecked(True)
@@ -175,6 +175,7 @@ class ExcelExportDialog(QtGui.QDialog):
         structure["row"].extend(allCols)
 
         self.options = {"name":         self.metaData["_name"],
+                        "source":       self.metaData["_source"],
                         "selection":    self.options["selection"],
                         "structure":    structure,
                         "fileType":     "EXCEL",

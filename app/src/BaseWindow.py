@@ -58,9 +58,13 @@ class BaseWindow(QtGui.QDialog):
 
         self.connect(self.ui.excelExportButton, QtCore.SIGNAL("clicked()"), self._initExcelExport)
         self.connect(self.ui.stataExportButton, QtCore.SIGNAL("clicked()"), self._initStataExport)
+
+        self.connect(self.ui.sourceComboBox, QtCore.SIGNAL("currentIndexChanged(const QString &)"), self._sourceChanged)
         #self.connect(self.ui.optionsButton, QtCore.SIGNAL("clicked()"), self._optionDialog)
 
-        Settings.inGui = True
+        self.ui.sourceComboBox.addItems(f.Settings.sources.keys())
+
+        #Settings.inGui = True
 
     def updateDBList(self):
         #---read filenames in data-directory ---
@@ -146,28 +150,22 @@ class BaseWindow(QtGui.QDialog):
 
                 tableWidget.setHorizontalHeaderLabels(["Select", "Short", "Long"])
 
-                #---checkbox select all---
-                boxall = QtGui.QTableWidgetItem()  # make item for select-all-checkbox
+                boxall = QtGui.QTableWidgetItem() 
                 boxall.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                 boxall.setCheckState(QtCore.Qt.Checked)
 
-                #---insert "select all" items---
                 tableWidget.setItem(0, 1, QtGui.QTableWidgetItem("Select All"))
                 tableWidget.setItem(0, 0, boxall)
 
-                for j, text in enumerate(entries):                             # fill in categories in i-th Title/Tab
-                    #---create  Checkboxes---
+                for j, text in enumerate(entries):
                     box = QtGui.QTableWidgetItem()
                     box.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                     # box.setCheckState(QtCore.Qt.Unchecked)
                     box.setCheckState(QtCore.Qt.Checked)
-                    #---link checkboxitem to array and TAble
-                    tableWidget.setItem(j + 1, 0, box)  # j+1 due to empty first line (select all)
 
-                    #---insert Info (short, long)---
-                    tableWidget.setItem(j + 1, 1, QtGui.QTableWidgetItem(text))  # +1 for the "select all" button
-                    cat_info = f.findInDict(tn, text)  # get "Austria" from input Title ("GEO") and Abbreviationo "AT"
-                    tableWidget.setItem(j + 1, 2, QtGui.QTableWidgetItem(cat_info))  # +1 for the "select all" button
+                    tableWidget.setItem(j + 1, 0, box)
+                    tableWidget.setItem(j + 1, 1, QtGui.QTableWidgetItem(text))
+                    tableWidget.setItem(j + 1, 2, QtGui.QTableWidgetItem(entries[text]))
 
                 tableWidget.resizeRowsToContents()
 
@@ -181,9 +179,12 @@ class BaseWindow(QtGui.QDialog):
 
         self._updateLcdNumber()
 
-        self.ui.database.setText("Actual Database: " + metaData["_name"])
+        self.ui.database.setText("Actual Database: " + metaData["_name"] + " from " + metaData["_source"])
 
         self.options = Settings.defaultOptions
+
+    def _sourceChanged(self, source):
+        self.ui.browseButton.setEnabled(f.Settings.sources[str(source)]["browseable"])
 
     def _tableItemChanged(self, tableItem):
         table = tableItem.tableWidget()
@@ -232,10 +233,13 @@ class BaseWindow(QtGui.QDialog):
             f.warn("WARNING - No Database seleced...no file removed.")  # ---check for no selection
             return False
 
-        name = str(self.ui.databaseTable.item(row, 0).text())  # ---get name of selected item---
-        f.removeTsvFile(name)
-        f.delFileInfo(name)  # -4 to delete the ".tsv" string
+        #f.removeTsvFile(name)
+        f.delFileInfo(self._getDatasetIdFromTable(row))
         self.updateDBList()
+
+    def _getDatasetIdFromTable(self, row):
+        return (str(self.ui.databaseTable.item(row, 1).text()), str(self.ui.databaseTable.item(row, 0).text()))
+
 
     def _updateDBfile(self):
         # FUNCTION: IF a row(database) is selected try redownload file and update List in any case.
@@ -246,27 +250,27 @@ class BaseWindow(QtGui.QDialog):
         if row == -1:  # ---check for no selection
             f.warn("WARNING - No Database selected")
         else:
-            fileName = str(self.ui.databaseTable.item(row, 0).text())  # ---get name of selected item---
-            self._downloadDB(fileName)
+            self._downloadDB(self._getDatasetIdFromTable(row))
 
     def _addDB(self):
         # download new database and update lst
         # returns FALSE if download of tsv-File fails or file is already in the List
 
-        fileName = str(self.ui.addLineEdit.displayText())  # ---GET FILENAME from LineEdit
-        fileName = fileName.replace(" ", "")               # deleting unintentionally space-characers
+        name = str(self.ui.addLineEdit.displayText())  # ---GET FILENAME from LineEdit
+        name = name.replace(" ", "")               # deleting unintentionally space-characers
 
+        source = str(self.ui.sourceComboBox.currentText())
         #---CHECK - is file already in Database?
-        if fileName in f.getFileList():
-            e = f.Error("tsv File already exists - Press Update button to redownload file", errorType=f.Error.WARNING)
-            e.show()
-            self.ui.addLineEdit.clear()
-            return
+        #if fileName in f.getFileList():
+        #    e = f.Error("tsv File already exists - Press Update button to redownload file", errorType=f.Error.WARNING)
+        #    e.show()
+        #    self.ui.addLineEdit.clear()
+        #    return
 
-        self._downloadDB(fileName)
+        self._downloadDB((source, name))
 
-    def _downloadDB(self, name):
-        self.worker = f.DownloadAndExtractDbWorker("eurostat", name, parent=self)
+    def _downloadDB(self, datasetId):
+        self.worker = f.DownloadAndExtractDbWorker(datasetId, parent=self)
         self.worker.startWork()
 
         # self.worker.finishedTrigger.connect(self.updateDBList)
@@ -279,20 +283,17 @@ class BaseWindow(QtGui.QDialog):
             f.warn("WARNING - No Database seleced...")
             return False
 
-        name = str(self.ui.databaseTable.item(row, 0).text())
-        f.log("Attempt to load selected database: " + name)
+        datasetId = self._getDatasetIdFromTable(row)
+        f.log("Attempt to load selected database: " + datasetId[0] + " (" + datasetId[1] + ")")
 
-        self.worker = f.LoadDbWorker(name, baseDialog=self, parent=self)
+        self.worker = f.LoadDbWorker(datasetId, baseDialog=self, parent=self)
         self.worker.startWork()
 
         #self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
         self.updateTab(self.worker.metaData)
 
     def _addLineEditChanged(self, text):
-        if len(text) > 0:
-            self.ui.addButton.setEnabled(True)
-        else:
-            self.ui.addButton.setEnabled(False)
+        self.ui.addButton.setEnabled(len(text) > 0)
 
     def _initExcelExport(self):
         #--check if in each Tab at least one is selected---

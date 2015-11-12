@@ -19,7 +19,7 @@ import itertools
 # SIMPLEJSON
 import simplejson as sj
 
-from helpers import Settings, Worker, log, findInDict, getFileInfo, loadTsvFile
+from helpers import Settings, Worker, log, findInDict, getFileInfo, loadTsvFile, LoadDbWorker
 
 import copy
 
@@ -27,31 +27,33 @@ import pandas as pd
 
 
 class ExportWorker(Worker):
-
     def __init__(self, options, parent=None):
         self.title = "Export ... "
         self.options = options
+        self.exportFunction = None
 
         if self.options["fileType"] == "STATA":
             self.steps = ["Prepare Data", "Writing", "Saving"]
+            self.exportFunction = exportStata
         elif self.options["fileType"] == "EXCEL":
             self.steps = ["Prepare Data", "Sorting", "Writing", "Saving"]
+            self.exportFunction = exportExcel
 
         Worker.__init__(self, parent)
 
     def work(self):
-        export(self.options, progressControl=self)
+        self.exportFunction(self.options, progressControl=self)
 
 
 #----------------------------------------------
 #----- EXPORT ---------------------------------
 #----------------------------------------------
 
-def export(options, progressControl=None):
-    if options["fileType"] == "EXCEL":
-        exportExcel(options, progressControl=progressControl)
-    elif options["fileType"] == "STATA":
-        exportStata(options, progressControl=progressControl)
+#def export(options, progressControl=None):
+#    if options["fileType"] == "EXCEL":
+#        exportExcel(options, progressControl=progressControl)
+#    elif options["fileType"] == "STATA":
+#        exportStata(options, progressControl=progressControl)
 
 
 def exportStata(options, progressControl=None):
@@ -61,7 +63,7 @@ def exportStata(options, progressControl=None):
     if progressControl is not None:
         progressControl.setStep(0)
 
-    data = _prepareData(options["name"], selection)
+    data = _prepareData((options["source"], options["name"]), selection)
 
     if progressControl is not None:
         progressControl.setStep(1)
@@ -116,10 +118,12 @@ def exportStata(options, progressControl=None):
             if code == "short":
                 values.append(r[i])
             elif code == "long":
-                values.append(findInDict(c, r[i]))
+                # TODO findInDict
+                values.append(r[i])
             elif code == "both":
                 values.append(r[i])
-                values.append(findInDict(c, r[i]))
+                # TODO findInDict
+                values.append(r[i])
 
         entry = False
         for c in itertools.product(*cIterList):
@@ -184,7 +188,10 @@ def exportExcel(options, progressControl=None):
 
     if options["presetTime"] == "Include Newer Periods":
         #log("  -- Option: Include Newer Periods")
-        metaData = loadTsvFile(options["name"])
+        #metaData = loadTsvFile(options["name"])
+        worker = LoadDbWorker(("eurostat", options["name"]), baseDialog = None)
+        worker.startWork()
+        metaData = worker.metaData
 
         lastTime = max(selection["time"])
 
@@ -204,7 +211,7 @@ def exportExcel(options, progressControl=None):
     if progressControl is not None:
         progressControl.setStep(0)
 
-    data = _prepareData(options["name"], selection)
+    data = _prepareData((options["source"], options["name"]), selection)
 
     if progressControl is not None:
         progressControl.setStep(2)
@@ -352,11 +359,62 @@ def _prepareTable(data, options, fixed={}):
     return table
 
 
-def _prepareData(name, selection=None):
+def _prepareData(datasetId, selection=None):
+    if source == "eurostat":
+        return eurostatBulkGetData(datasetId[1], selection)
+    elif source == "oecd":
+        return sdmxGetData(datasetId, selection)
+    else:
+        raise Error("Unknown Source")
+
+
+def sdmxGetData(datasetId, selection=None):
     colDimValues = []
     data = {"data": {}, "cols": [], "flags": []}
 
-    tsvFileName = os.path.join(Settings.dataPath, name + '.tsv')
+    keys = {}
+    dataFileName = os.path.join(Settings.dataPath, datasetId[0] + "-" + datasetId[1] + '-data.json')
+    with open(dataFileName, 'r') as dataFile:
+        dataJson = sj.loads(dataFile.read())
+        dims = dataJson['structure']['dimensions']['series']
+        log("dimensions - series")
+        for dim in dims:
+            log(" - " + dim["id"])
+            keys[dim["id"]] = dim["values"]
+
+        log("dimensions - observation")
+        dims = dataJson['structure']['dimensions']['observation']
+        for dim in dims:
+            log(" - " + dim["id"])
+            keys[dim["id"]] = dim["values"]
+
+        log("attributes - series")
+        dims = dataJson['structure']['attributes']['series']
+        for dim in dims:
+            log(" - " + dim["id"])
+            keys[dim["id"]] = dim["values"]
+
+        log("attributes - observation")
+        dims = dataJson['structure']['attributes']['observation']
+        for dim in dims:
+            log(" - " + dim["id"])
+            keys[dim["id"]] = dim["values"]
+
+
+    return data
+
+#----------------------------------------------
+
+
+
+
+#----------------------------------------------
+
+def eurostatBulkGetData(name, selection=None):
+    colDimValues = []
+    data = {"data": {}, "cols": [], "flags": []}
+
+    tsvFileName = os.path.join(Settings.dataPath, "eurostat-" + name + '.tsv')
     with open(tsvFileName, 'r') as tsvFile:
         tsvReader = csv.reader(tsvFile, delimiter='\t')
         for i, row in enumerate(tsvReader):
@@ -398,7 +456,7 @@ def _prepareData(name, selection=None):
                     else:
                         value = entry
 
-                    if value == Settings.eurostatEmptyCellSign:
+                    if value == Settings.sources["eurostat"]["emptyCellSign"]:
                         value = None
 
                     if value is not None:
@@ -408,6 +466,9 @@ def _prepareData(name, selection=None):
     return data
 
 #----------------------------------------------
+
+
+
 
 
 def runPresetsFromCL(fileList):

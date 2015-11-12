@@ -59,6 +59,7 @@ class Settings():
 
     sources             = {
         "eurostat": {
+            "browseable"          : True,
             "type"                : 'EUROSTAT-BULK',
             "dictURL"             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2F',
             "bulkURL"             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2F',
@@ -66,8 +67,9 @@ class Settings():
             'URLchar'             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?dir=data&sort=1&sort=2&start='
         },
         "oecd": {
+            "browseable"          : False,
             "type"                : 'SDMX-JSON',
-            "metaData"            : 'http://stats.oecd.org/SDMX-JSON/'
+            "url"                 : 'http://stats.oecd.org/SDMX-JSON/'
         }
     }
 
@@ -206,26 +208,35 @@ class DownloadAndExtractDbWorker(Worker):
     title = "Get Database ... "
     steps = ["Download File", "Extracting", "Get File Info"]
 
-    def __init__(self, source, name, parent = None):
+    def __init__(self, datasetId, parent = None):
         Worker.__init__(self, parent)
-        self.name = name
-        self.source = source
-
+        self.datasetId = datasetId
 
     def work(self):
         self.setStep(0)
         currentTime = datetime.now()
-        if self.source == "eurostat":
-            downloadTsvGzFile(self.name)
+        if self.datasetId[0] == "eurostat":
+            downloadTsvGzFile(self.datasetId[1])
             self.setStep(1)
-            extractTsvGzFile(self.name)
-            dsInfo = getFileInfoFromEurostat(self.name)
+            extractTsvGzFile(self.datasetId[1])
+            dsInfo = getFileInfoFromEurostat(self.datasetId[1])
             dsInfo["extractedDate"] = currentTime
-            dsInfo["name"] = self.name
-            dsInfo["source"] = "eurostat"
+            dsInfo["name"] = self.datasetId[1]
+            dsInfo["source"] = self.datasetId[0]
+            self.setStep(2)
+        elif self.datasetId[0] == "oecd":
+            sdmxDownloadData(self.datasetId)
+            self.setStep(1)
+            dsInfo = {}
+            dsInfo["source"] = self.datasetId[0]
+            dsInfo["name"] = self.datasetId[1]
+            dsInfo["size"] = "TODO"
+            dsInfo["extractedDate"] = currentTime
+            dsInfo["updatedDate"] = currentTime
+            dsInfo["lastCheckedDate"] = currentTime  
             self.setStep(2)
         else:
-            raise Exception("not imp")
+            raise Error("Source not implemented.", addMessage = "Source: '" + self.datasetId[0] + "'")
 
         addFileInfo(dsInfo)
 
@@ -234,29 +245,98 @@ class LoadDbWorker(Worker):
     title = "Loading Database ... "
     steps = ["Loading Categories"]
 
-    def __init__(self, name, baseDialog, parent = None):
+    def __init__(self, datasetId, baseDialog, parent = None):
         Worker.__init__(self, parent)
-        self.name = name
+        self.datasetId = datasetId
         self.baseDialog = baseDialog
 
 
     def work(self):
         self.setStep(0)
-        self.metaData = loadTsvFile(self.name)
+        if self.datasetId[0] == "eurostat":
+            self.metaData = loadTsvFile(self.datasetId)
+            
+        elif self.datasetId[0] == "oecd":
+            self.metaData = sdmxLoadMeta(self.datasetId)
+
+        self.metaData["_source"] = self.datasetId[0]
+        self.metaData["_name"] = self.datasetId[1]
+
+        log(self.metaData)
 
 #----------------------------------------------
 
 
+#----------------------------------------------
+#----- SDMX FUNCTIONS -------------------------
+#----------------------------------------------
+
+
+def sdmxDownloadData(datasetId):
+    fileNameData   = os.path.join(Settings.dataPath, datasetId[0] + "-" + datasetId[1] + "-data.json")
+    fileNameMeta   = os.path.join(Settings.dataPath, datasetId[0] + "-" + datasetId[1] + "-meta.json")
+
+    try:
+        fileURL = Settings.sources[datasetId[0]]["url"] + "data/" + datasetId[1]
+        response = urlopen(fileURL)
+
+        with open(fileNameData, 'w') as outfile:
+            outfile.write(response.read())
+
+        fileURL = Settings.sources[datasetId[0]]["url"] + "metadata/" + datasetId[1]
+        response = urlopen(fileURL)
+
+        with open(fileNameMeta, 'w') as outfile:
+            outfile.write(response.read())
+
+    except Exception as e:   
+        # delete the remains of partdownloads - if they exist
+        if os.path.isfile(fileName):
+            os.remove(fileName)
+
+        raise Error(message = "Dataset not available, check file availability.", addMessage = str(e))
+
+    log("Download successfull")
+
+
+
+def sdmxLoadMeta(datasetId):
+    metaData = {}
+    metaData["_cols"]   = []
+
+    metaFileName = fileNameMeta   = os.path.join(Settings.dataPath, datasetId[0] + "-" + datasetId[1] + "-meta.json")
+
+    # TODO: PUT IT GENERIC OUTSIDE
+    if not os.path.isfile(metaFileName):
+        worker = DownloadAndExtractDbWorker(datasetId)
+        worker.startWork()
+        worker.wait()
+
+    with open(metaFileName, 'r') as metaFile:
+        mD = sj.loads(metaFile.read())
+        dims = mD["structure"]["dimensions"]["observation"]
+
+        for dim in dims:
+            log(dim["id"]);
+            metaData["_cols"].append(dim["id"])
+            metaData[dim["id"]] = {}
+            for val in dim["values"]:
+                metaData[dim["id"]][val["id"]] = val["name"]
+        #log(metaFile.read())
+
+    return metaData
+
+
 
 #----------------------------------------------
-#----- TSV FUNCTIONS --------------------------
+#----- EUROSTAT BULK FUNCTIONS ----------------
 #----------------------------------------------
 
 def downloadTsvGzFile(name):
     log("start to download the db " + name + " from the eurostat webpage")
 
     gzFileName   = name + ".tsv.gz"
-    fGzFileName  = os.path.join(Settings.dataPath, gzFileName)
+    fGzFileName  = os.path.join(Settings.dataPath, "eurostat-" + gzFileName)
 
     try:
         #---get gz file from eurostat page---
@@ -287,10 +367,10 @@ def downloadTsvGzFile(name):
 def extractTsvGzFile(name):
     log("start to extract the db " + name)
 
-    gzFileName   = name + ".tsv.gz"
+    gzFileName   = "eurostat-" + name + ".tsv.gz"
     fGzFileName  = os.path.join(Settings.dataPath, gzFileName)
 
-    tsvFileName  = name + ".tsv"
+    tsvFileName  = "eurostat-" + name + ".tsv"
     fTsvFileName = os.path.join(Settings.dataPath, tsvFileName)
 
     try:
@@ -313,40 +393,21 @@ def extractTsvGzFile(name):
 
 
 def removeTsvFile(name):
-    # removes selected tsv-file from data directory
-    fileName = name + ".tsv"  #---get name of selected item---
+    fileName = "eurostat-" + name + ".tsv"
     log("removing file " + Settings.dataPath + fileName)
-
-    #---removing file---
     os.remove(os.path.join(Settings.dataPath, fileName))
 
 
-def loadTsvFile(name):
-    #FUNCtION: reads existing tsv-file
-    #1) checks dictionary
-    #2) fills class variables (cat_list,time_list) with the info
-    #   (titles,categories,dictionary...)
-
-    #TSV - FIle Structure after open as tsv:
-    # 1st row: [unit,nace_r1,indic_na,geo\time] [2012]  [2011] ... [1980]
-    # 2nd row  [CPI00_EUR,A_B,B1G,AT] [value] [value]...
-
-    #OUTPUT: 2D-Array: for titles:[unit,nace_r1,indic_na,geo\time]
-    # cat_list (2DArray) =[ [cpi00_eur,cpi00_nac...],[A_B,C-E,D,F...],[B1G] ]
-    # time_list          = [2012,2011,2010...]
-    # geo_list          = [AT,BE,BG...SI]
-
+def loadTsvFile(datasetId):
+    name = datasetId[1]
     metaData = {}
-    metaData["_name"]   = name
     metaData["_cols"]   = []
-    #metaData["geo"]     = []
-    #checkDictFile("geo")
 
     #---open file and read line by line---
-    tsvFileName = os.path.join(Settings.dataPath, name + '.tsv')
+    tsvFileName = os.path.join(Settings.dataPath, "eurostat-" + name + '.tsv')
 
     if not os.path.isfile(tsvFileName):
-        worker = DownloadAndExtractDbWorker(name)
+        worker = DownloadAndExtractDbWorker(datasetId)
         worker.startWork()
         worker.wait()
 
@@ -365,11 +426,11 @@ def loadTsvFile(name):
                 #---check DICTIONARY and append 2D-array for Category-list
                 for tt in metaData["_cols"]:
                     checkDictFile(tt)           #check dictionary of each title
-                    metaData[tt] = []
+                    metaData[tt] = {}
 
                 #---get col entries ---
                 for j in range(1, len(row)):  # starts at 1 because at [0] are categories
-                    metaData[colDim].append(row[j].strip())
+                    metaData[colDim][row[j].strip()] = findInDict(colDim, row[j].strip())
 
             else:
                 #---get row entries
@@ -377,7 +438,9 @@ def loadTsvFile(name):
                 for i, tt in enumerate(rowDims):  # for each title check if the category of this row is in the cat_list
                     colName = rowDims[i]
                     if tmp[i].strip() not in metaData[colName]:           # if not then append to cat_list in the row of the respective title
-                        metaData[colName].append(tmp[i].strip())
+                        #metaData[colName].append(tmp[i].strip())
+                        metaData[colName][tmp[i].strip()] = findInDict(colName, tmp[i].strip())
+
 
 
     return metaData
@@ -446,12 +509,12 @@ def getFileInfo(source, name):
             return info[source][name]
 
 
-def delFileInfo(source, name):
+def delFileInfo(datasetId):
     info = getFileInfoJson()
 
-    if source in info:
-        if name in info[source]:
-            del info[source][name]
+    if datasetId[0] in info:
+        if datasetId[1] in info[datasetId[0]]:
+            del info[datasetId[0]][datasetId[1]]
 
     saveFileInfoJson()
 
@@ -473,12 +536,14 @@ def getFileInfoFromEurostat(name):
     dateString = line.split("</td>")[3].split("&nbsp;")[1]
     eInfo["updatedDate"] = datetime.strptime(dateString, Settings.dateFormat)
 
-    info = getFileInfoJson()
-    if name in info:
-        info[name]["lastCheckedDate"] = eInfo["lastCheckedDate"]
-        if eInfo["updatedDate"] > info[name]["updatedDate"]:
-            info[name]["newerVersionAvailable"] = True
-        saveFileInfoJson()
+    wInfo = getFileInfoJson()
+    if "eurostat" in wInfo:
+        info = wInfo["eurostat"]
+        if name in info:
+            info[name]["lastCheckedDate"] = eInfo["lastCheckedDate"]
+            if eInfo["updatedDate"] > info[name]["updatedDate"]:
+                info[name]["newerVersionAvailable"] = True
+            saveFileInfoJson()
 
     return eInfo
 
@@ -492,8 +557,12 @@ def addFileInfo(dsInfo):
         base[dsInfo["source"]] = {}
         info = base[dsInfo["source"]]
 
-    info[dsInfo["name"]] = {"size": dsInfo["size"], "updatedDate": dsInfo["updatedDate"],
-                "extractedDate": dsInfo["extractedDate"], "lastCheckedDate": dsInfo["lastCheckedDate"] }
+    info[dsInfo["name"]] = {
+            "size"              : dsInfo["size"], 
+            "updatedDate"       : dsInfo["updatedDate"],
+            "extractedDate"     : dsInfo["extractedDate"], 
+            "lastCheckedDate"   : dsInfo["lastCheckedDate"] 
+        }
 
     saveFileInfoJson()
 

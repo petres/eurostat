@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "simplejson"))
 
 # HELPERS AND SETTINGS
-from helpers import Settings, Worker, log, findInDict
+from helpers import Settings, Worker, log
 
 import simplejson as sj
 

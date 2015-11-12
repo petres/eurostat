@@ -147,6 +147,7 @@ class StataExportDialog(QtGui.QDialog):
             structure[name]["encode"] = (self.combos[name]["encoding"].checkState() == QtCore.Qt.Checked)
 
         self.options = {"name":         self.metaData["_name"],
+                        "source":       self.metaData["_source"],
                         "selection":    self.options["selection"],
                         "structure":    structure,
                         "fileType":     "STATA",

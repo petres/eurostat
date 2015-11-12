@@ -146,4 +146,4 @@ class TreeDialog(QtGui.QDialog):
     def _accepted(self):
         if self._selectedDatabase is not None:
             self.close()
-            self.main._downloadDB(self._selectedDatabase)
+            self.main._downloadDB(("eurostat", self._selectedDatabase))

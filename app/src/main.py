@@ -6,7 +6,7 @@ from PyQt4 import QtGui
 
 # HELPERS AND SETTINGS
 from helpers import Settings
-from exportFunctions import runPresetsFromCL
+from exportFunctions import runPresetsFromCL, sdmxGetData
 
 import argparse
 
@@ -37,6 +37,8 @@ parser.add_argument('--folders', '-f', metavar='folder', type=is_dir, nargs='+',
 
 
 def main():
+    return sdmxGetData(("oecd", "MSTI_PUB"))
+
     args = parser.parse_args()
 
     if args.folders is not None:
