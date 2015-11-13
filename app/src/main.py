@@ -37,7 +37,7 @@ parser.add_argument('--folders', '-f', metavar='folder', type=is_dir, nargs='+',
 
 
 def main():
-    return sdmxGetData(("oecd", "MSTI_PUB"))
+    #return sdmxGetData(("oecd", "MSTI_PUB"))
 
     args = parser.parse_args()
 

@@ -187,22 +187,21 @@ def exportExcel(options, progressControl=None):
     selection = options["selection"]
 
     if options["presetTime"] == "Include Newer Periods":
-        #log("  -- Option: Include Newer Periods")
-        #metaData = loadTsvFile(options["name"])
-        worker = LoadDbWorker(("eurostat", options["name"]), baseDialog = None)
+        worker = LoadDbWorker((options["source"], options["name"]), baseDialog = None)
         worker.startWork()
         metaData = worker.metaData
 
-        lastTime = max(selection["time"])
+        
 
         #log("      last used time is: " + lastTime)
+        if "time" in metaData:
+            lastTime = max(selection["time"])
+            for t in metaData["time"]:
+                if t > lastTime:
+                    #log("       -> adding " + t)
+                    selection["time"].append(t)
 
-        for t in metaData["time"]:
-            if t > lastTime:
-                #log("       -> adding " + t)
-                selection["time"].append(t)
-
-    _sortingBeforeExport(selection, options["sorting"])
+    #_sortingBeforeExport(selection, options["sorting"])
 
     existingSheets = []
 
@@ -360,9 +359,9 @@ def _prepareTable(data, options, fixed={}):
 
 
 def _prepareData(datasetId, selection=None):
-    if source == "eurostat":
+    if datasetId[0] == "eurostat":
         return eurostatBulkGetData(datasetId[1], selection)
-    elif source == "oecd":
+    elif datasetId[0] == "oecd":
         return sdmxGetData(datasetId, selection)
     else:
         raise Error("Unknown Source")
@@ -376,29 +375,76 @@ def sdmxGetData(datasetId, selection=None):
     dataFileName = os.path.join(Settings.dataPath, datasetId[0] + "-" + datasetId[1] + '-data.json')
     with open(dataFileName, 'r') as dataFile:
         dataJson = sj.loads(dataFile.read())
+        cols = []
+
         dims = dataJson['structure']['dimensions']['series']
         log("dimensions - series")
         for dim in dims:
             log(" - " + dim["id"])
             keys[dim["id"]] = dim["values"]
-
-        log("dimensions - observation")
-        dims = dataJson['structure']['dimensions']['observation']
-        for dim in dims:
-            log(" - " + dim["id"])
-            keys[dim["id"]] = dim["values"]
+            cols.append(dim["id"])
+            data["cols"].append(dim["id"])
 
         log("attributes - series")
         dims = dataJson['structure']['attributes']['series']
         for dim in dims:
             log(" - " + dim["id"])
             keys[dim["id"]] = dim["values"]
+            cols.append(dim["id"])
+
+        log("dimensions - observation")
+        dims = dataJson['structure']['dimensions']['observation']
+        for dim in dims:
+            log(" - " + dim["id"])
+            keys[dim["id"]] = dim["values"]
+            cols.append(dim["id"])
+            data["cols"].append(dim["id"])
 
         log("attributes - observation")
         dims = dataJson['structure']['attributes']['observation']
         for dim in dims:
             log(" - " + dim["id"])
             keys[dim["id"]] = dim["values"]
+            cols.append(dim["id"])
+
+        series = dataJson['dataSets'][0]['series']
+        for dk in series:
+            kIdA = []
+            cont = False
+            for i, dkp in enumerate(dk.split(':')):
+                v = int(dkp)
+                if selection and keys[cols[i]][v]['id'] not in selection[cols[i]]:
+                    cont = True
+                kIdA.append(v)
+            if cont:
+                continue
+
+            kIdA += series[dk]['attributes']
+            for obsK in series[dk]['observations']:
+                if selection and keys[cols[len(kIdA)]][int(obsK)]['id'] not in selection[cols[len(kIdA)]]:
+                    continue
+
+                okIdA = kIdA + [int(obsK)]
+                obs = series[dk]['observations'][obsK]
+                value = obs[0]
+                okIdA += obs[1:]
+                #print str(okIdA) + " - " + str(value)
+
+                okVA = []
+                for i, k in enumerate(okIdA):
+                    if k is None:
+                        okVA.append(None)
+                    else:
+                        okVA.append(keys[cols[i]][k]['id'])
+
+                dKey = []
+                for col in data["cols"]:
+                    dKey.append(okVA[cols.index(col)])
+
+                data["data"][tuple(dKey)] = {"value": value, "flag": okVA[-1]}
+
+                #print str(okVA) + " - " + str(value)
+            
 
 
     return data
