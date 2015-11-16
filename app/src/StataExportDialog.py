@@ -21,7 +21,7 @@ import stataExport
 class StataExportDialog(QtGui.QDialog):
 
     def __init__(self, mainWin):
-        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Tool)
+        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Dialog)
         self.main = mainWin
         self.ui = stataExport.Ui_stataExportDialog()
         self.ui.setupUi(self)

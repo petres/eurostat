@@ -13,7 +13,7 @@ import progress
 class ProgressDialog(QtGui.QDialog):
 
     def __init__(self, mainWin = None):
-        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Tool)
+        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Dialog)
         self.main = mainWin
         self.ui = progress.Ui_progressDialog()
         self.ui.setupUi(self)

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>483</width>
-    <height>365</height>
+    <height>391</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -69,19 +69,6 @@
          <item row="2" column="1">
           <widget class="QComboBox" name="rowCombo"/>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="colLabel">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>in Cols</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="1">
           <widget class="QComboBox" name="colCombo"/>
          </item>
@@ -119,6 +106,19 @@
             </widget>
            </item>
           </layout>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="colLabel">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>in Cols</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -253,128 +253,131 @@
       <attribute name="title">
        <string>Options</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <layout class="QFormLayout" name="optionsLayout">
-         <property name="fieldGrowthPolicy">
-          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="styleLabel">
+         <property name="text">
+          <string>Style</string>
          </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="styleLabel">
-           <property name="text">
-            <string>Style</string>
-           </property>
-          </widget>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="styleComboBox">
+         <item>
+          <property name="text">
+           <string>Eurostat</string>
+          </property>
          </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="styleComboBox">
-           <item>
-            <property name="text">
-             <string>Eurostat</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Basic</string>
-            </property>
-           </item>
-          </widget>
+         <item>
+          <property name="text">
+           <string>Basic</string>
+          </property>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="emptyEntryLabel">
-           <property name="text">
-            <string>Empty Entry</string>
-           </property>
-          </widget>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="emptyEntryLabel">
+         <property name="text">
+          <string>Empty Entry</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="emptyEntryEdit">
+         <property name="autoFillBackground">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Time Column</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="timeCombo"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="timeSortingLabel">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Time Sorting</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="timeSortingCombo">
+         <item>
+          <property name="text">
+           <string>ascending</string>
+          </property>
          </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="emptyEntryEdit">
-           <property name="autoFillBackground">
-            <bool>true</bool>
-           </property>
-          </widget>
+         <item>
+          <property name="text">
+           <string>descending</string>
+          </property>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="timeSortingLabel">
-           <property name="minimumSize">
-            <size>
-             <width>100</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Time Sorting</string>
-           </property>
-          </widget>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="overwriteLabel">
+         <property name="minimumSize">
+          <size>
+           <width>120</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Overwrite</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QComboBox" name="overwriteComboBox">
+         <item>
+          <property name="text">
+           <string>Sheet</string>
+          </property>
          </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="timeSortingCombo">
-           <item>
-            <property name="text">
-             <string>ascending</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>descending</string>
-            </property>
-           </item>
-          </widget>
+         <item>
+          <property name="text">
+           <string>File</string>
+          </property>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="overwriteLabel">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Overwrite</string>
-           </property>
-          </widget>
+         <item>
+          <property name="text">
+           <string>Data</string>
+          </property>
          </item>
-         <item row="3" column="1">
-          <widget class="QComboBox" name="overwriteComboBox">
-           <item>
-            <property name="text">
-             <string>Sheet</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>File</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Data</string>
-            </property>
-           </item>
-          </widget>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="localeLabel">
+         <property name="text">
+          <string>Locales</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QComboBox" name="localeComboBox">
+         <item>
+          <property name="text">
+           <string>EN</string>
+          </property>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="localeLabel">
-           <property name="text">
-            <string>Locales</string>
-           </property>
-          </widget>
+         <item>
+          <property name="text">
+           <string>DE</string>
+          </property>
          </item>
-         <item row="4" column="1">
-          <widget class="QComboBox" name="localeComboBox">
-           <item>
-            <property name="text">
-             <string>EN</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>DE</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
+        </widget>
        </item>
       </layout>
      </widget>

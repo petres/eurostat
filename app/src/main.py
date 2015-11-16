@@ -6,7 +6,7 @@ from PyQt4 import QtGui
 
 # HELPERS AND SETTINGS
 from helpers import Settings
-from exportFunctions import runPresetsFromCL, sdmxGetData
+from exportFunctions import runPresetsFromCL
 
 import argparse
 

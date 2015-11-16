@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "gui"))
 from PyQt4 import QtCore, QtGui
 
 # HELPERS AND SETTINGS
-from helpers import Settings
+from settings import Settings
 import exportFunctions as e
 
 import helpers as f
@@ -18,7 +18,7 @@ import excelExport
 
 class ExcelExportDialog(QtGui.QDialog):
     def __init__(self, mainWin):
-        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Tool)
+        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Dialog)
         self.main = mainWin
         self.ui = excelExport.Ui_excelExportDialog()
         self.ui.setupUi(self)
@@ -39,11 +39,7 @@ class ExcelExportDialog(QtGui.QDialog):
         # EMPTY CELL SIGN
         self.ui.emptyEntryEdit.setText(options["emptyCellSign"])
 
-        # TIME SORTING
-        if options["sorting"]["time"] == QtCore.Qt.DescendingOrder:
-            self.ui.timeSortingCombo.setCurrentIndex(self.ui.timeSortingCombo.findText("descending"))
-        elif options["sorting"]["time"] == QtCore.Qt.AscendingOrder:
-            self.ui.timeSortingCombo.setCurrentIndex(self.ui.timeSortingCombo.findText("ascending"))
+
 
         # OVERWRITE
         self.ui.overwriteComboBox.setCurrentIndex(self.ui.overwriteComboBox.findText(options["overwrite"]))
@@ -54,20 +50,43 @@ class ExcelExportDialog(QtGui.QDialog):
         # LOCALES
         self.ui.localeComboBox.setCurrentIndex(self.ui.localeComboBox.findText(options["locales"]))
 
-        #print metaData
+        timeColumn = f.Settings.sources[self.metaData["_source"]]['defaultTimeColumn']
+        if "timeColumn" in options:
+            timeColumn = options['timeColumn']
 
-        if "time" in metaData["_cols"]:
+        #print metaData
+        self.ui.timeCombo.addItems(["None"] + metaData["_cols"])
+        if timeColumn in metaData["_cols"]:
+            self.ui.timeCombo.setCurrentIndex(self.ui.timeCombo.findText(timeColumn))
+
             self.ui.indexCheckBox.setEnabled(True)
-            self.ui.indexCombo.addItems(metaData["time"].values()[::-1])
+            self.ui.indexCombo.addItems(metaData[timeColumn].values()[::-1])
+
+            if "time" in options["sorting"]:
+                # TIME SORTING
+                if options["sorting"]["time"] == QtCore.Qt.DescendingOrder:
+                    self.ui.timeSortingCombo.setCurrentIndex(self.ui.timeSortingCombo.findText("descending"))
+                elif options["sorting"]["time"] == QtCore.Qt.AscendingOrder:
+                    self.ui.timeSortingCombo.setCurrentIndex(self.ui.timeSortingCombo.findText("ascending"))
+
+            options["structure"]["col"] = [timeColumn] 
+
+        else:
+            self.ui.timeCombo.setCurrentIndex(self.ui.timeCombo.findText("None"))
+            
+
 
         if "index" in options and options["index"] is not None:
             self.ui.indexCheckBox.setChecked(True)
             self.ui.indexCombo.setCurrentIndex(self.ui.indexCombo.findText(options["index"]))
 
+
+
+
         # STRUCTURE
         self.combos = { "sheet": { "combo": self.ui.sheetCombo, "values": ["None"] + metaData["_cols"]},
-                        "row": { "combo": self.ui.rowCombo, "values": metaData["_cols"]},
-                        "col": { "combo": self.ui.colCombo, "values": metaData["_cols"]}}
+                        "row":   { "combo": self.ui.rowCombo,   "values": metaData["_cols"]},
+                        "col":   { "combo": self.ui.colCombo,   "values": metaData["_cols"]}}
 
         for comboType in self.combos:
             combo = self.combos[comboType]["combo"]
@@ -154,11 +173,13 @@ class ExcelExportDialog(QtGui.QDialog):
         Settings.exportEmptyCellSign = str(self.ui.emptyEntryEdit.text())
 
         ## Sorting setting
-        timeSorting = str(self.ui.timeSortingCombo.currentText())
-        if timeSorting == "ascending":
-            sorting["time"] = QtCore.Qt.AscendingOrder
-        elif timeSorting == "descending":
-            sorting["time"] = QtCore.Qt.DescendingOrder
+        timeColumn = str(self.ui.timeCombo.currentText())
+        if timeColumn != "None":
+            timeSorting = str(self.ui.timeSortingCombo.currentText())
+            if timeSorting == "ascending":
+                sorting[timeColumn] = QtCore.Qt.AscendingOrder
+            elif timeSorting == "descending":
+                sorting[timeColumn] = QtCore.Qt.DescendingOrder
 
         ## Structure setting
         # copy list, we should not modify the meta data
@@ -180,6 +201,7 @@ class ExcelExportDialog(QtGui.QDialog):
                         "structure":    structure,
                         "fileType":     "EXCEL",
                         "fileName":     str(self.ui.fileEdit.text()),
+                        "timeColumn":   timeColumn,
                         "sorting":      sorting,
                         "codeLabels":   True if self.ui.codeRadioButton.isChecked() or self.ui.bothRadioButton.isChecked() else False,
                         "longLabels":   True if self.ui.labelRadioButton.isChecked() or self.ui.bothRadioButton.isChecked() else False,

@@ -110,14 +110,14 @@ class Writer():
             else:
                 self.write((initialOffset[0] + tableOffsetRow, 0), label["name"])
                 self.write((initialOffset[0] + tableOffsetRow, 1), label["value"])
-                self.write((initialOffset[0] + tableOffsetRow, 2), label["value"])
+                self.write((initialOffset[0] + tableOffsetRow, 2), label["label"])
                 #self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(label["name"], label["value"]))
                 tableOffsetRow += 1
 
         for crit in table["structure"]["fixed"]:
             self.write((initialOffset[0] + tableOffsetRow, 0), crit)
-            self.write((initialOffset[0] + tableOffsetRow, 1), table["structure"]["fixed"][crit])
-            self.write((initialOffset[0] + tableOffsetRow, 2), table["structure"]["fixed"][crit])
+            self.write((initialOffset[0] + tableOffsetRow, 1), table["structure"]["fixed"][crit]["value"])
+            self.write((initialOffset[0] + tableOffsetRow, 2), table["structure"]["fixed"][crit]["label"])
             #self.write((initialOffset[0] + tableOffsetRow, 2), f.findInDict(crit, table["structure"]["fixed"][crit]))
             tableOffsetRow += 1
 

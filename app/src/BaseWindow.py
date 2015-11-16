@@ -16,13 +16,15 @@ from ProgressDialog import ProgressDialog
 from TreeDialog import TreeDialog
 
 # HELPERS AND SETTINGS
-from helpers import Settings
+from settings import Settings
 import helpers as f
 
 # BASE UI
 import base
 
 from datetime import datetime, timedelta
+from collections import OrderedDict
+
 
 
 class BaseWindow(QtGui.QDialog):
@@ -67,8 +69,6 @@ class BaseWindow(QtGui.QDialog):
         #Settings.inGui = True
 
     def updateDBList(self):
-        #---read filenames in data-directory ---
-        #tsvNames = f.getFileList()
         dsList = f.getFileInfoJson()
 
         comb = []
@@ -92,11 +92,12 @@ class BaseWindow(QtGui.QDialog):
             if "newerVersionAvailable" in info and info["newerVersionAvailable"]:
                 newerVersionAvailable = True
             else:
-                if source == "eurostat":
-                    if info["lastCheckedDate"] < (datetime.now() - timedelta(minutes=60)):
-                        newInfo = f.getFileInfoFromEurostat(name)
-                        if newInfo["updatedDate"] > info["updatedDate"]:
-                            newerVersionAvailable = True
+                pass
+                #if source == "eurostat":
+                #    if info["lastCheckedDate"] < (datetime.now() - timedelta(minutes=60)):
+                #        newInfo = f.eurostatBulkCheckStatus(name)
+                #        if newInfo["updatedDate"] > info["updatedDate"]:
+                #            newerVersionAvailable = True
 
             if newerVersionAvailable:
                 for j in range(3):
@@ -131,7 +132,7 @@ class BaseWindow(QtGui.QDialog):
                 self.ui.tabWidget.addTab(tWidget, tn)
                 continue
             else:
-                entries = metaData[tn]
+                entries = OrderedDict(sorted(metaData[tn].iteritems()))
                 #---TABLE Properties----
                 tableWidget = QtGui.QTableWidget(tWidget)           # set Table and Link to Tab
                 self.ui.tabWidget.addTab(tableWidget, tn)
@@ -210,7 +211,6 @@ class BaseWindow(QtGui.QDialog):
         self._updateLcdNumber()
 
     def _updateLcdNumber(self):
-        # Set Counter
         ec = 1
         for tableWidget in self.tables.values():
             c = 0
@@ -226,70 +226,39 @@ class BaseWindow(QtGui.QDialog):
         self.ui.lcdNumber.display(ec)
 
     def _removeDBfile(self):
-        # removes selected tsv-file from data directory
-        row = self.ui.databaseTable.currentRow()  # ---get name of selected db---
-
-        if row == -1:
-            f.warn("WARNING - No Database seleced...no file removed.")  # ---check for no selection
-            return False
-
-        #f.removeTsvFile(name)
-        f.delFileInfo(self._getDatasetIdFromTable(row))
+        f.delFileInfo(self._getDatasetIdFromTable())
         self.updateDBList()
 
-    def _getDatasetIdFromTable(self, row):
+    def _getDatasetIdFromTable(self, row = None):
+        if row is None:
+            row = self.ui.databaseTable.currentRow()
+        if row == -1:
+            raise Exception("No Row selected")
         return (str(self.ui.databaseTable.item(row, 1).text()), str(self.ui.databaseTable.item(row, 0).text()))
 
-
     def _updateDBfile(self):
-        # FUNCTION: IF a row(database) is selected try redownload file and update List in any case.
-
-        #---get name of selected db---
-        row = self.ui.databaseTable.currentRow()
-
-        if row == -1:  # ---check for no selection
-            f.warn("WARNING - No Database selected")
-        else:
-            self._downloadDB(self._getDatasetIdFromTable(row))
+        self._downloadDB(self._getDatasetIdFromTable())
 
     def _addDB(self):
-        # download new database and update lst
-        # returns FALSE if download of tsv-File fails or file is already in the List
-
         name = str(self.ui.addLineEdit.displayText())  # ---GET FILENAME from LineEdit
         name = name.replace(" ", "")               # deleting unintentionally space-characers
-
         source = str(self.ui.sourceComboBox.currentText())
-        #---CHECK - is file already in Database?
-        #if fileName in f.getFileList():
-        #    e = f.Error("tsv File already exists - Press Update button to redownload file", errorType=f.Error.WARNING)
-        #    e.show()
-        #    self.ui.addLineEdit.clear()
-        #    return
-
         self._downloadDB((source, name))
 
     def _downloadDB(self, datasetId):
         self.worker = f.DownloadAndExtractDbWorker(datasetId, parent=self)
         self.worker.startWork()
-
         # self.worker.finishedTrigger.connect(self.updateDBList)
         self.updateDBList()
 
     def _loadDB(self):
-        row = self.ui.databaseTable.currentRow()
-
-        if row == -1:
-            f.warn("WARNING - No Database seleced...")
-            return False
-
-        datasetId = self._getDatasetIdFromTable(row)
-        f.log("Attempt to load selected database: " + datasetId[0] + " (" + datasetId[1] + ")")
+        datasetId = self._getDatasetIdFromTable()
+        #f.log("Attempt to load selected database: " + datasetId[0] + " (" + datasetId[1] + ")")
 
         self.worker = f.LoadDbWorker(datasetId, baseDialog=self, parent=self)
         self.worker.startWork()
-
         #self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))
+        #print self.worker.metaData
         self.updateTab(self.worker.metaData)
 
     def _addLineEditChanged(self, text):
@@ -338,7 +307,7 @@ class BaseWindow(QtGui.QDialog):
 
         options = f.getPresetFromFile(fileName)
 
-        self.worker = f.LoadDbWorker(options["name"], baseDialog=self, parent=self)
+        self.worker = f.LoadDbWorker((options["name"], options["name"]), baseDialog=self, parent=self)
         self.worker.startWork()
 
         #self.worker.finishedTrigger.connect(lambda: self.updateTab(self.worker.metaData))

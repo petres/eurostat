@@ -26,7 +26,7 @@ class TreeDialog(QtGui.QDialog):
 
     def __init__(self, mainWin = None):
         print(mainWin)
-        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Tool)
+        QtGui.QDialog.__init__(self, mainWin, QtCore.Qt.Dialog)
         self.main = mainWin
         self.ui = tree.Ui_TreeDialog()
         self.ui.setupUi(self)

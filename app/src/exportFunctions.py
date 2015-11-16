@@ -19,7 +19,9 @@ import itertools
 # SIMPLEJSON
 import simplejson as sj
 
-from helpers import Settings, Worker, log, findInDict, getFileInfo, loadTsvFile, LoadDbWorker
+from settings import Settings
+from helpers import Worker, log, LoadDbWorker
+from source import getData
 
 import copy
 
@@ -49,21 +51,16 @@ class ExportWorker(Worker):
 #----- EXPORT ---------------------------------
 #----------------------------------------------
 
-#def export(options, progressControl=None):
-#    if options["fileType"] == "EXCEL":
-#        exportExcel(options, progressControl=progressControl)
-#    elif options["fileType"] == "STATA":
-#        exportStata(options, progressControl=progressControl)
-
 
 def exportStata(options, progressControl=None):
+    print options
     structure = options["structure"]
     selection = options["selection"]
 
     if progressControl is not None:
         progressControl.setStep(0)
 
-    data = _prepareData((options["source"], options["name"]), selection)
+    data = getData((options["source"], options["name"]), selection)
 
     if progressControl is not None:
         progressControl.setStep(1)
@@ -118,12 +115,10 @@ def exportStata(options, progressControl=None):
             if code == "short":
                 values.append(r[i])
             elif code == "long":
-                # TODO findInDict
-                values.append(r[i])
+                values.append(data["long"][c][r[i]])
             elif code == "both":
                 values.append(r[i])
-                # TODO findInDict
-                values.append(r[i])
+                values.append(data["long"][c][r[i]])
 
         entry = False
         for c in itertools.product(*cIterList):
@@ -191,17 +186,13 @@ def exportExcel(options, progressControl=None):
         worker.startWork()
         metaData = worker.metaData
 
-        
-
-        #log("      last used time is: " + lastTime)
-        if "time" in metaData:
-            lastTime = max(selection["time"])
-            for t in metaData["time"]:
+        if "timeColumn" in metaData:
+            lastTime = max(selection[metaData["timeColumn"]])
+            for t in metaData[metaData["timeColumn"]]:
                 if t > lastTime:
-                    #log("       -> adding " + t)
-                    selection["time"].append(t)
+                    selection[metaData["timeColumn"]].append(t)
 
-    #_sortingBeforeExport(selection, options["sorting"])
+    _sortingBeforeExport(selection, options["sorting"])
 
     existingSheets = []
 
@@ -210,7 +201,7 @@ def exportExcel(options, progressControl=None):
     if progressControl is not None:
         progressControl.setStep(0)
 
-    data = _prepareData((options["source"], options["name"]), selection)
+    data = getData((options["source"], options["name"]), selection)
 
     if progressControl is not None:
         progressControl.setStep(2)
@@ -234,7 +225,7 @@ def exportExcel(options, progressControl=None):
 
             fixed = {}
             for i, j in enumerate(structure["sheet"]):
-                fixed[j] = t[i]
+                fixed[j] = {"value": t[i], "label": data["long"][j][t[i]]}
 
             table = _prepareTable(data, options, fixed=fixed)
 
@@ -312,6 +303,7 @@ def _prepareTable(data, options, fixed={}):
             toAppend = {"count": len(selection[item]), "name": item}
             if len(selection[item]) == 1:
                 toAppend["value"] = selection[item][0]
+                toAppend["label"] = data["long"][item][selection[item][0]]
             table["structure"][dim].append(toAppend)
 
     for dim in ["col", "row"]:
@@ -326,7 +318,8 @@ def _prepareTable(data, options, fixed={}):
         for e in p[dim]:
             label = []
             for i, j in enumerate(e):
-                label.append({"code": j, "long": findInDict(structure[dim][i], j)})
+                #label.append({"code": j, "long": findInDict(structure[dim][i], j)})
+                label.append({"code": j, "long": data["long"][structure[dim][i]][j]})
             table["labels"][dim].append(label)
 
     for r in p["row"]:
@@ -339,7 +332,7 @@ def _prepareTable(data, options, fixed={}):
                 elif bc in structure["row"]:
                     keyEntry = r[structure["row"].index(bc)]
                 elif bc in fixed:
-                    keyEntry = fixed[bc]
+                    keyEntry = fixed[bc]["value"]
                 else:
                     raise Error('Wow Wow Wow, thats not good, keylist and dict differ, what have you done?')
 
@@ -357,161 +350,6 @@ def _prepareTable(data, options, fixed={}):
 
     return table
 
-
-def _prepareData(datasetId, selection=None):
-    if datasetId[0] == "eurostat":
-        return eurostatBulkGetData(datasetId[1], selection)
-    elif datasetId[0] == "oecd":
-        return sdmxGetData(datasetId, selection)
-    else:
-        raise Error("Unknown Source")
-
-
-def sdmxGetData(datasetId, selection=None):
-    colDimValues = []
-    data = {"data": {}, "cols": [], "flags": []}
-
-    keys = {}
-    dataFileName = os.path.join(Settings.dataPath, datasetId[0] + "-" + datasetId[1] + '-data.json')
-    with open(dataFileName, 'r') as dataFile:
-        dataJson = sj.loads(dataFile.read())
-        cols = []
-
-        dims = dataJson['structure']['dimensions']['series']
-        log("dimensions - series")
-        for dim in dims:
-            log(" - " + dim["id"])
-            keys[dim["id"]] = dim["values"]
-            cols.append(dim["id"])
-            data["cols"].append(dim["id"])
-
-        log("attributes - series")
-        dims = dataJson['structure']['attributes']['series']
-        for dim in dims:
-            log(" - " + dim["id"])
-            keys[dim["id"]] = dim["values"]
-            cols.append(dim["id"])
-
-        log("dimensions - observation")
-        dims = dataJson['structure']['dimensions']['observation']
-        for dim in dims:
-            log(" - " + dim["id"])
-            keys[dim["id"]] = dim["values"]
-            cols.append(dim["id"])
-            data["cols"].append(dim["id"])
-
-        log("attributes - observation")
-        dims = dataJson['structure']['attributes']['observation']
-        for dim in dims:
-            log(" - " + dim["id"])
-            keys[dim["id"]] = dim["values"]
-            cols.append(dim["id"])
-
-        series = dataJson['dataSets'][0]['series']
-        for dk in series:
-            kIdA = []
-            cont = False
-            for i, dkp in enumerate(dk.split(':')):
-                v = int(dkp)
-                if selection and keys[cols[i]][v]['id'] not in selection[cols[i]]:
-                    cont = True
-                kIdA.append(v)
-            if cont:
-                continue
-
-            kIdA += series[dk]['attributes']
-            for obsK in series[dk]['observations']:
-                if selection and keys[cols[len(kIdA)]][int(obsK)]['id'] not in selection[cols[len(kIdA)]]:
-                    continue
-
-                okIdA = kIdA + [int(obsK)]
-                obs = series[dk]['observations'][obsK]
-                value = obs[0]
-                okIdA += obs[1:]
-                #print str(okIdA) + " - " + str(value)
-
-                okVA = []
-                for i, k in enumerate(okIdA):
-                    if k is None:
-                        okVA.append(None)
-                    else:
-                        okVA.append(keys[cols[i]][k]['id'])
-
-                dKey = []
-                for col in data["cols"]:
-                    dKey.append(okVA[cols.index(col)])
-
-                data["data"][tuple(dKey)] = {"value": value, "flag": okVA[-1]}
-
-                #print str(okVA) + " - " + str(value)
-            
-
-
-    return data
-
-#----------------------------------------------
-
-
-
-
-#----------------------------------------------
-
-def eurostatBulkGetData(name, selection=None):
-    colDimValues = []
-    data = {"data": {}, "cols": [], "flags": []}
-
-    tsvFileName = os.path.join(Settings.dataPath, "eurostat-" + name + '.tsv')
-    with open(tsvFileName, 'r') as tsvFile:
-        tsvReader = csv.reader(tsvFile, delimiter='\t')
-        for i, row in enumerate(tsvReader):
-            if i == 0:
-                tmp = row[0].split("\\")
-                colDim = tmp[1]
-                data["cols"] = tmp[0].split(",") + [colDim]
-                for j in range(1, len(row)):  # starts at 1 because at [0] are categories
-                    colDimValues.append(row[j].strip())
-            else:
-                inSelection = True
-                keyList = []
-                tmp = row[0].split(",")                     # row eg. CPI00_EUR,A_B,B1G,BG
-
-                for k, rowDimValue in enumerate(tmp):
-                    # FILTERING
-                    if (selection is not None) and (rowDimValue.strip() not in selection[data["cols"][k]]):
-                        inSelection = False
-                        break
-                    keyList.append(rowDimValue.strip())
-
-                if not inSelection:
-                    continue
-
-                for j in range(1, len(row)):  # starts at 1 because at [0] are categories
-                    # FILTERING
-                    if (selection is not None) and (colDimValues[j - 1] not in selection[colDim]):
-                        continue
-
-                    key = tuple(keyList + [colDimValues[j - 1]])
-                    entry = row[j].strip()
-
-                    flag = None
-                    if " " in entry:
-                        value = entry.split(' ')[0]
-                        flag = entry.split(' ')[1]
-                        if flag not in data["flags"]:
-                            data["flags"].append(flag)
-                    else:
-                        value = entry
-
-                    if value == Settings.sources["eurostat"]["emptyCellSign"]:
-                        value = None
-
-                    if value is not None:
-                        value = float(value)
-
-                    data["data"][key] = {"value": value, "flag": flag}
-    return data
-
-#----------------------------------------------
 
 
 
