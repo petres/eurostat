@@ -1,6 +1,6 @@
-## eurostat bulk exporter
+## eco data exporter
 ### About
-This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/). The downloaded datasets can be filtered, sorted and exported as Excel and Stata files. Other export file types will follow (CSV, R datasets, ...). 
+This program provides a graphical user interface (GUI) which allows [bulk datasets](http://epp.eurostat.ec.europa.eu/portal/page/portal/statistics/bulk_download) downloads from [eurostat](http://epp.eurostat.ec.europa.eu/) and SDMX JSON data downloads from [OECD](http://stats.oecd.org/). The downloaded datasets can be filtered, sorted and exported as Excel and Stata files. Other export file types will follow (CSV, R datasets, ...). 
 In addition presets can be created, stored and executed which helps to automize recurring eurostat data exports. It also allows the automatic creation of charts in Excel files.
 
 #### Screenshot
