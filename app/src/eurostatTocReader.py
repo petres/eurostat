@@ -38,7 +38,7 @@ class TocWorker(Worker):
 
     def work(self):
         self.setStep(0)
-        response = urlopen(Settings.tocXmlURL)
+        response = urlopen(Settings.sources['eurostat']['tocXmlURL'])
         with open(Settings.tocXml, 'wb') as outfile:
             outfile.write(response.read())
         

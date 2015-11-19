@@ -18,7 +18,7 @@ from datetime import datetime
 import copy
 
 from source import * 
-from settings import Settings
+from settings import Settings, log, error, warn
 
 
 #----------------------------------------------
@@ -301,23 +301,3 @@ def getPresetFromFile(fileName):
 
 #----------------------------------------------
 
-
-
-
-
-#----------------------------------------------
-#----- ELSE -----------------------------------
-#----------------------------------------------
-
-def log(message):
-    print(message)
-
-
-def warn(message):
-    print("WARNING: " + message)
-
-
-def error(message):
-    print("ERROR: " + message)
-
-#----------------------------------------------

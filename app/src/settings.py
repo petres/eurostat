@@ -5,9 +5,7 @@ import os, sys
 class Settings():
     dataPath            = "data"
 
-    #tocXmlURL           = "http://epp.eurostat.ec.europa.eu/NavTree_prod/everybody/BulkDownloadListing?sort=1&file=table_of_contents.xml"
-    tocXmlURL           = "http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=table_of_contents.xml"
-
+    
     tocXml              = os.path.join('data', 'table_of_contents.xml')
     tocDict             = os.path.join('data', 'toc.json')
     dictByName          = os.path.join('data', 'dictByName.json')
@@ -31,7 +29,9 @@ class Settings():
             "bulkURL"             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2F',
             "emptyCellSign"       : ':', 
             'URLchar'             : 'http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?dir=data&sort=1&sort=2&start=',
-            'defaultTimeColumn'   : 'time'
+            'defaultTimeColumn'   : 'time',
+            'tocXmlURL'           : "http://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=table_of_contents.xml"
+
         },
         "oecd": {
             "browseable"          : False,
@@ -68,4 +68,23 @@ class Settings():
                             "index":            None,}
 
     dateFormat          = '%d/%m/%Y %H:%M:%S'
+#----------------------------------------------
+
+
+
+#----------------------------------------------
+#----- ELSE -----------------------------------
+#----------------------------------------------
+
+def log(message):
+    print(message)
+
+
+def warn(message):
+    print("WARNING: " + message)
+
+
+def error(message):
+    print("ERROR: " + message)
+
 #----------------------------------------------

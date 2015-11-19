@@ -19,7 +19,7 @@ except ImportError:
 
 from datetime import datetime
 
-from settings import Settings
+from settings import Settings, log, error, warn
 
 
 #----------------------------------------------
@@ -263,10 +263,6 @@ def _getDict(title):
 
 
 def _findInDict(title, shorty):
-    #INPUT: title is equal to .dic -filename    (Geo)
-    #INPUT: shorts is the abbreviations (AT)
-    #RETURN: Long-Text of shorts     (Austria...)
-
     if title.upper() == "TIME":    #TIME is the only title without long-text
         return shorty
 
@@ -288,40 +284,27 @@ def _findInDict(title, shorty):
 
 
 def _checkDictFile(fileName):
-    #return True if dictionar exists or download was successful; or if fileName=TIME (where no Dic exists)
-    #return False otherwise;
-
     if fileName.upper == "TIME":
         return True
 
     dictFileName = fileName + ".dic"
 
-    #log("check for dictionary " + dictFileName)
     if dictFileName in os.listdir(Settings.dictPath):
-        #log("dictionary found...OK")
         return True
     else:
-        #log("dictionary NOT found ... start download attempt")
         return _downloadDictFile(dictFileName)
 
 
 def _downloadDictFile(dictFileName):
-    # download of eurostat dictionary file
-    #return True if download OK
-    #return False otherwise
-
+    fileURL = Settings.sources["eurostat"]["dictURL"] + dictFileName
     try:
-        # get URL and response
-        fileURL = Settings.dictURL + dictFileName
         response = urlopen(fileURL)
-        #log("Dictionary download OK")
     except:
-        error("Downloading Dictionary " + dictFileName)
+        error("Downloading Dictionary " + dictFileName + " (" + fileURL + ")")
         return False
 
     try:
         with open(os.path.join(Settings.dictPath, dictFileName), 'wb') as outfile:
-            # saving download
             outfile.write(response.read())
     except:
         error("Saving Dictionary " + dictFileName)

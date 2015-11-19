@@ -19,8 +19,8 @@ import itertools
 # SIMPLEJSON
 import simplejson as sj
 
-from settings import Settings
-from helpers import Worker, log, LoadDbWorker
+from settings import Settings, log, error, warn
+from helpers import Worker, LoadDbWorker
 from source import getData
 
 import copy
@@ -53,7 +53,6 @@ class ExportWorker(Worker):
 
 
 def exportStata(options, progressControl=None):
-    print options
     structure = options["structure"]
     selection = options["selection"]
 
@@ -181,16 +180,16 @@ def exportExcel(options, progressControl=None):
     structure = options["structure"]
     selection = options["selection"]
 
-    if options["presetTime"] == "Include Newer Periods":
-        worker = LoadDbWorker((options["source"], options["name"]), baseDialog = None)
-        worker.startWork()
-        metaData = worker.metaData
+    # if options["presetTime"] == "Include Newer Periods":
+    #     worker = LoadDbWorker((options["source"], options["name"]), baseDialog = None)
+    #     worker.startWork()
+    #     metaData = worker.metaData
 
-        if "timeColumn" in metaData:
-            lastTime = max(selection[metaData["timeColumn"]])
-            for t in metaData[metaData["timeColumn"]]:
-                if t > lastTime:
-                    selection[metaData["timeColumn"]].append(t)
+    #     if "timeColumn" in metaData:
+    #         lastTime = max(selection[metaData["timeColumn"]])
+    #         for t in metaData[metaData["timeColumn"]]:
+    #             if t > lastTime:
+    #                 selection[metaData["timeColumn"]].append(t)
 
     _sortingBeforeExport(selection, options["sorting"])
 

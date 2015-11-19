@@ -66,7 +66,7 @@ class BaseWindow(QtGui.QDialog):
 
         self.ui.sourceComboBox.addItems(f.Settings.sources.keys())
 
-        #Settings.inGui = True
+        Settings.inGui = True
 
     def updateDBList(self):
         dsList = f.getFileInfoJson()
