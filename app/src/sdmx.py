@@ -15,7 +15,7 @@ except ImportError:
     from urllib2 import urlopen
 
 from settings import Settings
-
+from helpers import Error
 
 #----------------------------------------------
 #----- SDMX FUNCTIONS -------------------------
@@ -38,7 +38,8 @@ def downloadData(datasetId):
         with open(fileNameMeta, 'w') as outfile:
             outfile.write(response.read())
 
-    except Exception as e:   
+    except Exception as e:
+        from helpers import Error
         # if os.path.isfile(fileNameData):
         #     os.remove(fileName)
 

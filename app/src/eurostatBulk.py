@@ -20,7 +20,7 @@ except ImportError:
 from datetime import datetime
 
 from settings import Settings, log, error, warn
-
+from helpers import Error
 
 #----------------------------------------------
 #----- EUROSTAT BULK FUNCTIONS ----------------
